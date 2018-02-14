@@ -70,8 +70,8 @@
       </BaseAddress>
     </Link>
     <PostBuildEvent>
-      <Command>call ..\..\filecopy.bat $(TargetPath) ..\..\..\game\mod\cl_dlls\$(TargetName).dll
-call ..\..\filecopy.bat $(TargetDir)\$(TargetName).pdb ..\..\..\game\mod\cl_dlls\$(TargetName).pdb</Command>
+      <Command>call ..\..\filecopy.bat $(TargetPath) "D:\Steam\steamapps\common\Half-Life\test\cl_dlls\$(TargetName).dll"
+call ..\..\filecopy.bat $(TargetDir)\$(TargetName).pdb "D:\Steam\steamapps\common\Half-Life\test\cl_dlls\$(TargetName).pdb"</Command>
     </PostBuildEvent>
     <PostBuildEvent>
       <Message>Performing Post-Build Event</Message>
