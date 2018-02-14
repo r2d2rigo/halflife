@@ -26,7 +26,10 @@
 
 #include "StudioModelRenderer.h"
 #include "GameStudioModelRenderer.h"
+#include "CustomStudioModelRenderer.h"
 #include "Exports.h"
+
+cvar_t			*m_pCvarCustomRenderer;
 
 //
 // Override the StudioModelRender virtual member functions here to implement custom bone
@@ -38,6 +41,8 @@ extern engine_studio_api_t IEngineStudio;
 
 // The renderer object, created on the stack.
 CGameStudioModelRenderer g_StudioRenderer;
+CCustomStudioModelRenderer g_CustomStudioRenderer;
+
 /*
 ====================
 CGameStudioModelRenderer
@@ -60,7 +65,12 @@ R_StudioDrawPlayer
 */
 int R_StudioDrawPlayer( int flags, entity_state_t *pplayer )
 {
-	return g_StudioRenderer.StudioDrawPlayer( flags, pplayer );
+	if (m_pCvarCustomRenderer->value < 1)
+	{
+		return g_StudioRenderer.StudioDrawPlayer(flags, pplayer);
+	}
+
+	return g_CustomStudioRenderer.StudioDrawPlayer(flags, pplayer);
 }
 
 /*
@@ -71,7 +81,12 @@ R_StudioDrawModel
 */
 int R_StudioDrawModel( int flags )
 {
-	return g_StudioRenderer.StudioDrawModel( flags );
+	if (m_pCvarCustomRenderer->value < 1)
+	{
+		return g_StudioRenderer.StudioDrawModel(flags);
+	}
+
+	return g_CustomStudioRenderer.StudioDrawModel(flags);
 }
 
 /*
@@ -82,7 +97,10 @@ R_StudioInit
 */
 void R_StudioInit( void )
 {
+	m_pCvarCustomRenderer = gEngfuncs.pfnRegisterVariable("r_customrenderer", "0", FCVAR_CLIENTDLL);
+
 	g_StudioRenderer.Init();
+	g_CustomStudioRenderer.Init();
 }
 
 // The simple drawing interface we'll pass back to the engine
