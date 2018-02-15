@@ -14,7 +14,6 @@
 #include "entity_state.h"
 #include "cl_entity.h"
 #include "dlight.h"
-#include "triangleapi.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -126,7 +125,9 @@ float ****CCustomEngineStudio::StudioGetBoneTransform(void)
 
 float ****CCustomEngineStudio::StudioGetLightTransform(void)
 {
-	return m_pEngineStudio.StudioGetLightTransform();
+	m_pLightTransforms = (float(*)[MAXSTUDIOBONES][3][4])m_pEngineStudio.StudioGetLightTransform();
+
+	return (float****)m_pLightTransforms;
 }
 
 float ***CCustomEngineStudio::StudioGetAliasTransform(void)
@@ -169,6 +170,13 @@ void CCustomEngineStudio::StudioEntityLight(struct alight_s *plight)
 void CCustomEngineStudio::StudioSetupLighting(struct alight_s *plighting)
 {
 	m_pEngineStudio.StudioSetupLighting(plighting);
+
+	m_pLighting = plighting;
+
+	for (int i = 0; i < m_pStudioHeader->numbones; i++)
+	{
+		VectorIRotate(m_pLighting->plightvec, (*m_pLightTransforms)[i], m_vBoneLightVectors[i]);
+	}
 }
 
 void CCustomEngineStudio::StudioDrawPoints(void)
@@ -191,15 +199,66 @@ void CCustomEngineStudio::StudioDrawPoints(void)
 	vec3_t *pModelVertices = (vec3_t *)((byte *)m_pStudioHeader + m_pSubModel->vertindex);
 	byte *pVertexBoneIndices = ((byte *)m_pStudioHeader + m_pSubModel->vertinfoindex);
 
+	vec3_t *pModelNormals = (vec3_t *)((byte *)m_pStudioHeader + m_pSubModel->normindex);
+	byte *pNormalBoneIndices = ((byte *)m_pStudioHeader + m_pSubModel->norminfoindex);
+
 	for (int i = 0; i < m_pSubModel->numverts; i++)
 	{
 		VectorTransform(pModelVertices[i], (*m_pBoneTransforms)[pVertexBoneIndices[i]], m_vTransformedVertices[i]);
 	}
 
+	vec3_t *pLightValues = &m_vLightValues[0];
+
 	for (int i = 0; i < m_pSubModel->nummesh; i++)
 	{
 		mstudiomesh_t *pSubModelMesh = (mstudiomesh_t *)((byte *)m_pStudioHeader + m_pSubModel->meshindex) + i;
 		mstudiotexture_t *pMeshTexture = &pTextures[pSkinReferences[pSubModelMesh->skinref]];
+
+		for (int j = 0; j < pSubModelMesh->numnorms; j++, pLightValues++, pModelNormals++, pNormalBoneIndices++)
+		{
+			float lightValue = m_pLighting->ambientlight;
+
+			if (pMeshTexture->flags & STUDIO_NF_FLATSHADE)
+			{
+				lightValue += m_pLighting->shadelight * 0.8;
+			}
+			else
+			{
+				float r;
+				float lightcos = DotProduct((*pModelNormals), m_vBoneLightVectors[*pNormalBoneIndices]); // -1 colinear, 1 opposite
+
+				if (lightcos > 1.0)
+					lightcos = 1;
+
+				lightValue += m_pLighting->shadelight;
+
+				r = 1.45;
+				if (r <= 1.0) r = 1.0;
+
+				lightcos = (lightcos + (r - 1.0)) / r; 		// do modified hemispherical lighting
+				if (lightcos > 0.0)
+				{
+					lightValue -= m_pLighting->shadelight * lightcos;
+				}
+				if (lightValue <= 0)
+					lightValue = 0;
+			}
+
+			if (lightValue > 255)
+				lightValue = 255;
+
+			lightValue = lightValue / 255.0;
+
+			// FIX: move this check out of the inner loop
+			if (pMeshTexture->flags & STUDIO_NF_CHROME)
+			{
+				// Chrome(g_chrome[(float(*)[3])lv - g_pvlightvalues], *pnormbone, (float *)pstudionorms);
+			}
+
+			pLightValues->x = lightValue * m_pLighting->color[0];
+			pLightValues->y = lightValue * m_pLighting->color[1];
+			pLightValues->z = lightValue * m_pLighting->color[2];
+		}
 
 		short *pMeshTriangles = (short *)((byte *)m_pStudioHeader + pSubModelMesh->triindex);
 
@@ -208,61 +267,32 @@ void CCustomEngineStudio::StudioDrawPoints(void)
 
 		glBindTexture(GL_TEXTURE_2D, pMeshTexture->index);
 
-		if (pMeshTexture->flags & STUDIO_NF_CHROME)
+		while (int triangleCount = *(pMeshTriangles++))
 		{
-			while (int triangleCount = *(pMeshTriangles++))
+			GLenum primitiveMode = GL_TRIANGLE_STRIP;
+
+			if (triangleCount < 0)
 			{
-				GLenum primitiveMode = GL_TRIANGLE_STRIP;
-
-				if (triangleCount < 0)
-				{
-					primitiveMode = GL_TRIANGLE_FAN;
-					triangleCount = -triangleCount;
-				}
-
-				glBegin(primitiveMode);
-				glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-
-				while (triangleCount > 0)
-				{
-					glTexCoord2f(pMeshTriangles[2] * s, pMeshTriangles[3] * t);
-
-					glVertex3fv(m_vTransformedVertices[pMeshTriangles[0]]);
-
-					triangleCount--;
-					pMeshTriangles += 4;
-				}
-
-				glEnd();
+				primitiveMode = GL_TRIANGLE_FAN;
+				triangleCount = -triangleCount;
 			}
-		}
-		else
-		{
-			while (int triangleCount = *(pMeshTriangles++))
+
+			glBegin(primitiveMode);
+
+			while (triangleCount > 0)
 			{
-				GLenum primitiveMode = GL_TRIANGLE_STRIP;
+				vec3_t *vertexLightValue = &m_vLightValues[pMeshTriangles[1]];
+				glColor4f(vertexLightValue->x, vertexLightValue->y, vertexLightValue->z, 1.0f);
 
-				if (triangleCount < 0)
-				{
-					primitiveMode = GL_TRIANGLE_FAN;
-					triangleCount = -triangleCount;
-				}
+				glTexCoord2f(pMeshTriangles[2] * s, pMeshTriangles[3] * t);
 
-				glBegin(primitiveMode);
-				glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+				glVertex3fv(m_vTransformedVertices[pMeshTriangles[0]]);
 
-				while (triangleCount > 0)
-				{
-					glTexCoord2f(pMeshTriangles[2] * s, pMeshTriangles[3] * t);
-
-					glVertex3fv(m_vTransformedVertices[pMeshTriangles[0]]);
-
-					triangleCount--;
-					pMeshTriangles += 4;
-				}
-
-				glEnd();
+				triangleCount--;
+				pMeshTriangles += 4;
 			}
+
+			glEnd();
 		}
 	}
 }

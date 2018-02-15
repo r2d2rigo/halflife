@@ -78,6 +78,14 @@ void CrossProduct (const float *v1, const float *v2, float *cross)
 	cross[2] = v1[0]*v2[1] - v1[1]*v2[0];
 }
 
+
+void VectorIRotate(const vec3_t in1, const float in2[3][4], vec3_t &out)
+{
+	out[0] = in1[0] * in2[0][0] + in1[1] * in2[1][0] + in1[2] * in2[2][0];
+	out[1] = in1[0] * in2[0][1] + in1[1] * in2[1][1] + in1[2] * in2[2][1];
+	out[2] = in1[0] * in2[0][2] + in1[1] * in2[1][2] + in1[2] * in2[2][2];
+}
+
 /*
 ====================
 VectorTransform

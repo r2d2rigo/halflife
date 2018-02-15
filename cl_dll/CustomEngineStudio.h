@@ -25,9 +25,13 @@ private:
 	cl_entity_t *m_pCurrentEntity;
 	mstudiobodyparts_t *m_pBodyPart;
 	mstudiomodel_t *m_pSubModel;
+	alight_t *m_pLighting;
 
 	float (*m_pBoneTransforms)[MAXSTUDIOBONES][3][4];
+	float (*m_pLightTransforms)[MAXSTUDIOBONES][3][4];
 	vec3_t m_vTransformedVertices[MAXSTUDIOVERTS];
+	vec3_t m_vLightValues[MAXSTUDIOVERTS];
+	vec3_t m_vBoneLightVectors[MAXSTUDIOBONES];
 
 public:
 	CCustomEngineStudio(void);
