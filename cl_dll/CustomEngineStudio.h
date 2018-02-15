@@ -4,6 +4,7 @@
 #pragma once
 #endif
 
+#include "studio.h"
 #include "r_studioint.h"
 
 /*
@@ -16,7 +17,15 @@ class CCustomEngineStudio
 {
 private:
 	cvar_t *m_pCvarCustomRenderer;
-	engine_studio_api_t _engineStudio;
+	engine_studio_api_t m_pEngineStudio;
+
+	studiohdr_t *m_pStudioHeader;
+	studiohdr_t *m_pTextureHeader;
+
+	cl_entity_t *m_pCurrentEntity;
+	mstudiobodyparts_t *m_pBodyPart;
+	mstudiomodel_t *m_pSubModel;
+	float (*m_pBoneTransforms)[MAXSTUDIOBONES][3][4];
 
 public:
 	CCustomEngineStudio(void);
