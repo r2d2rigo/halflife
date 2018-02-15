@@ -34,8 +34,9 @@
 
 #include "r_studioint.h"
 #include "com_model.h"
+#include "CustomEngineStudio.h"
 
-extern engine_studio_api_t IEngineStudio;
+extern CCustomEngineStudio IEngineStudio;
 
 static int tracerCount[ 32 ];
 

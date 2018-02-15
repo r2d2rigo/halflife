@@ -21,6 +21,7 @@
 
 #include "StudioModelRenderer.h"
 #include "GameStudioModelRenderer.h"
+#include "CustomEngineStudio.h"
 
 extern cvar_t *tfc_newmodels;
 
@@ -35,7 +36,7 @@ extern extra_player_info_t  g_PlayerExtraInfo[MAX_PLAYERS+1];
 int m_nPlayerGaitSequences[MAX_CLIENTS];
 
 // Global engine <-> studio model rendering code interface
-engine_studio_api_t IEngineStudio;
+CCustomEngineStudio IEngineStudio;
 
 /////////////////////
 // Implementation of CStudioModelRenderer.h

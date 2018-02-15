@@ -49,8 +49,9 @@ void VectorAngles( const float *forward, float *angles );
 #include "r_studioint.h"
 #include "com_model.h"
 #include "kbutton.h"
+#include "CustomEngineStudio.h"
 
-extern engine_studio_api_t IEngineStudio;
+extern CCustomEngineStudio IEngineStudio;
 
 extern kbutton_t	in_mlook;
 

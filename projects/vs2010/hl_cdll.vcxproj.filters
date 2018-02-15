@@ -306,7 +306,7 @@
     <ClCompile Include="..\..\public\interface.cpp">
       <Filter>Source Files\public</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\cl_dll\CustomStudioModelRenderer.cpp">
+    <ClCompile Include="..\..\cl_dll\CustomEngineStudio.cpp">
       <Filter>Source Files\cl_dll</Filter>
     </ClCompile>
   </ItemGroup>
@@ -431,7 +431,7 @@
     <ClInclude Include="..\..\cl_dll\view.h">
       <Filter>Header Files\cl_dll</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\cl_dll\CustomStudioModelRenderer.h">
+    <ClInclude Include="..\..\cl_dll\CustomEngineStudio.h">
       <Filter>Header Files\cl_dll</Filter>
     </ClInclude>
   </ItemGroup>
