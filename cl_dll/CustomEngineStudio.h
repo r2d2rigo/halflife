@@ -25,7 +25,9 @@ private:
 	cl_entity_t *m_pCurrentEntity;
 	mstudiobodyparts_t *m_pBodyPart;
 	mstudiomodel_t *m_pSubModel;
+
 	float (*m_pBoneTransforms)[MAXSTUDIOBONES][3][4];
+	vec3_t m_vTransformedVertices[MAXSTUDIOVERTS];
 
 public:
 	CCustomEngineStudio(void);

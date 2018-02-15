@@ -171,8 +171,6 @@ void CCustomEngineStudio::StudioSetupLighting(struct alight_s *plighting)
 	m_pEngineStudio.StudioSetupLighting(plighting);
 }
 
-vec3_t			_transformedVerts[MAXSTUDIOVERTS];
-
 void CCustomEngineStudio::StudioDrawPoints(void)
 {
 	if (m_pCvarCustomRenderer->value < 1)
@@ -182,297 +180,202 @@ void CCustomEngineStudio::StudioDrawPoints(void)
 		return;
 	}
 
-	mstudiotexture_t * ptexture = (mstudiotexture_t *)((byte *)m_pTextureHeader + m_pTextureHeader->textureindex);
-	short *pskinref = (short *)((byte *)m_pTextureHeader + m_pTextureHeader->skinindex);
+	mstudiotexture_t * pTextures = (mstudiotexture_t *)((byte *)m_pTextureHeader + m_pTextureHeader->textureindex);
+	short *pSkinReferences = (short *)((byte *)m_pTextureHeader + m_pTextureHeader->skinindex);
+	
 	if (m_pCurrentEntity->curstate.skin != 0 && m_pCurrentEntity->curstate.skin < m_pTextureHeader->numskinfamilies)
-		pskinref += (m_pCurrentEntity->curstate.skin * m_pTextureHeader->numskinref);
-
-	// for (int j = 0; j < bodyPart->nummodels; j++)
 	{
-		vec3_t *pstudioverts = (vec3_t *)((byte *)m_pStudioHeader + m_pSubModel->vertindex);
-		byte *pvertbone = ((byte *)m_pStudioHeader + m_pSubModel->vertinfoindex);
+		pSkinReferences += (m_pCurrentEntity->curstate.skin * m_pTextureHeader->numskinref);
+	}
 
-		for (int z = 0; z < m_pSubModel->numverts; z++)
+	vec3_t *pModelVertices = (vec3_t *)((byte *)m_pStudioHeader + m_pSubModel->vertindex);
+	byte *pVertexBoneIndices = ((byte *)m_pStudioHeader + m_pSubModel->vertinfoindex);
+
+	for (int i = 0; i < m_pSubModel->numverts; i++)
+	{
+		VectorTransform(pModelVertices[i], (*m_pBoneTransforms)[pVertexBoneIndices[i]], m_vTransformedVertices[i]);
+	}
+
+	for (int i = 0; i < m_pSubModel->nummesh; i++)
+	{
+		mstudiomesh_t *pSubModelMesh = (mstudiomesh_t *)((byte *)m_pStudioHeader + m_pSubModel->meshindex) + i;
+		mstudiotexture_t *pMeshTexture = &pTextures[pSkinReferences[pSubModelMesh->skinref]];
+
+		short *pMeshTriangles = (short *)((byte *)m_pStudioHeader + pSubModelMesh->triindex);
+
+		float s = 1.0 / (float)pMeshTexture->width;
+		float t = 1.0 / (float)pMeshTexture->height;
+
+		glBindTexture(GL_TEXTURE_2D, pMeshTexture->index);
+
+		if (pMeshTexture->flags & STUDIO_NF_CHROME)
 		{
-			VectorTransform(pstudioverts[z], (*m_pBoneTransforms)[pvertbone[z]], _transformedVerts[z]);
-		}
-
-		for (int k = 0; k < m_pSubModel->nummesh; k++)
-		{
-			mstudiomesh_t *mesh = (mstudiomesh_t *)((byte *)m_pStudioHeader + m_pSubModel->meshindex) + k;
-			short *triangles = (short *)((byte *)m_pStudioHeader + mesh->triindex);
-			vec3_t *vertices = (vec3_t *)((byte *)m_pStudioHeader + m_pSubModel->vertindex);
-
-			float s = 1.0 / (float)ptexture[pskinref[mesh->skinref]].width;
-			float t = 1.0 / (float)ptexture[pskinref[mesh->skinref]].height;
-
-			glBindTexture(GL_TEXTURE_2D, ptexture[pskinref[mesh->skinref]].index);
-
-			if (ptexture[pskinref[mesh->skinref]].flags & STUDIO_NF_CHROME)
+			while (int triangleCount = *(pMeshTriangles++))
 			{
-				while (int tri = *(triangles++))
+				GLenum primitiveMode = GL_TRIANGLE_STRIP;
+
+				if (triangleCount < 0)
 				{
-					if (tri < 0)
-					{
-						// gEngfuncs.pTriAPI->Begin(TRI_TRIANGLE_FAN);
-						glBegin(GL_TRIANGLE_FAN);
-						tri = -tri;
-					}
-					else
-					{
-						// gEngfuncs.pTriAPI->Begin(TRI_TRIANGLE_STRIP);
-						glBegin(GL_TRIANGLE_STRIP);
-					}
-
-					glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-
-					for (; tri > 0; tri--, triangles += 4)
-					{
-						glTexCoord2f(triangles[2] * s, triangles[3] * t);
-
-						vec3_t *vertex = &_transformedVerts[triangles[0]];
-						glVertex3fv(vertex[0]);
-					}
-
-					glEnd();
+					primitiveMode = GL_TRIANGLE_FAN;
+					triangleCount = -triangleCount;
 				}
-			}
-			else
-			{
-				while (int tri = *(triangles++))
+
+				glBegin(primitiveMode);
+				glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+
+				while (triangleCount > 0)
 				{
-					if (tri < 0)
-					{
-						// gEngfuncs.pTriAPI->Begin(TRI_TRIANGLE_FAN);
-						glBegin(GL_TRIANGLE_FAN);
-						tri = -tri;
-					}
-					else
-					{
-						// gEngfuncs.pTriAPI->Begin(TRI_TRIANGLE_STRIP);
-						glBegin(GL_TRIANGLE_STRIP);
-					}
+					glTexCoord2f(pMeshTriangles[2] * s, pMeshTriangles[3] * t);
 
-					glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+					glVertex3fv(m_vTransformedVertices[pMeshTriangles[0]]);
 
-					for (; tri > 0; tri--, triangles += 4)
-					{
-						glTexCoord2f(triangles[2] * s, triangles[3] * t);
-
-						vec3_t *vertex = &_transformedVerts[triangles[0]];
-						glVertex3fv(vertex[0]);
-					}
-
-					glEnd();
+					triangleCount--;
+					pMeshTriangles += 4;
 				}
+
+				glEnd();
 			}
 		}
-	}
-
-
-		/*
-			ptexture = (mstudiotexture_t *)((byte *)texturesHeader + texturesHeader->textureindex);
-			short *pskinref = (short *)((byte *)texturesHeader + texturesHeader->skinindex);
-			if (m_pCurrentEntity->curstate.skin != 0 && m_pCurrentEntity->curstate.skin < texturesHeader->numskinfamilies)
-			pskinref += (m_pCurrentEntity->curstate.skin * texturesHeader->numskinref);
-
-			// for (int j = 0; j < bodyPart->nummodels; j++)
-			{
-			mstudiomodel_t *model = (mstudiomodel_t *)((byte *)m_pStudioHeader + bodyPart->modelindex) + index;
-			// m_pmodel = (mstudiomodel_t *)((byte *)m_pstudiohdr + pbodypart->modelindex) + index;
-
-			vec3_t *pstudioverts = (vec3_t *)((byte *)m_pStudioHeader + model->vertindex);
-			byte *pvertbone = ((byte *)m_pStudioHeader + model->vertinfoindex);
-
-			for (int z = 0; z < model->numverts; z++)
-			{
-			VectorTransform(pstudioverts[z], (*m_pbonetransform)[pvertbone[z]], _transformedVerts[z]);
-			}
-
-			for (int k = 0; k < model->nummesh; k++)
-			{
-			mstudiomesh_t *mesh = (mstudiomesh_t *)((byte *)m_pStudioHeader + model->meshindex) + k;
-			short *triangles = (short *)((byte *)m_pStudioHeader + mesh->triindex);
-			vec3_t *vertices = (vec3_t *)((byte *)m_pStudioHeader + model->vertindex);
-
-			float s = 1.0 / (float)ptexture[pskinref[mesh->skinref]].width;
-			float t = 1.0 / (float)ptexture[pskinref[mesh->skinref]].height;
-
-			glBindTexture(GL_TEXTURE_2D, ptexture[pskinref[mesh->skinref]].index);
-
-			if (ptexture[pskinref[mesh->skinref]].flags & STUDIO_NF_CHROME)
-			{
-			while (int tri = *(triangles++))
-			{
-			if (tri < 0)
-			{
-			// gEngfuncs.pTriAPI->Begin(TRI_TRIANGLE_FAN);
-			glBegin(GL_TRIANGLE_FAN);
-			tri = -tri;
-			}
-			else
-			{
-			// gEngfuncs.pTriAPI->Begin(TRI_TRIANGLE_STRIP);
-			glBegin(GL_TRIANGLE_STRIP);
-			}
-
-			glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-
-			for (; tri > 0; tri--, triangles += 4)
-			{
-			glTexCoord2f(triangles[2] * s, triangles[3] * t);
-
-			vec3_t *vertex = &_transformedVerts[triangles[0]];
-			glVertex3fv(vertex[0]);
-			}
-
-			glEnd();
-			}
-			}
-			else
-			{
-			while (int tri = *(triangles++))
-			{
-			if (tri < 0)
-			{
-			// gEngfuncs.pTriAPI->Begin(TRI_TRIANGLE_FAN);
-			glBegin(GL_TRIANGLE_FAN);
-			tri = -tri;
-			}
-			else
-			{
-			// gEngfuncs.pTriAPI->Begin(TRI_TRIANGLE_STRIP);
-			glBegin(GL_TRIANGLE_STRIP);
-			}
-
-			glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-
-			for (; tri > 0; tri--, triangles += 4)
-			{
-			glTexCoord2f(triangles[2] * s, triangles[3] * t);
-
-			vec3_t *vertex = &_transformedVerts[triangles[0]];
-			glVertex3fv(vertex[0]);
-			}
-
-			glEnd();
-			}
-			}
-			}
-			}
-			}
-			*/
-	}
-
-	void CCustomEngineStudio::StudioDrawHulls(void)
-	{
-		m_pEngineStudio.StudioDrawHulls();
-	}
-
-	void CCustomEngineStudio::StudioDrawAbsBBox(void)
-	{
-		m_pEngineStudio.StudioDrawAbsBBox();
-	}
-
-	void CCustomEngineStudio::StudioDrawBones(void)
-	{
-		m_pEngineStudio.StudioDrawBones();
-	}
-
-	void CCustomEngineStudio::StudioSetupSkin(void *ptexturehdr, int index)
-	{
-		m_pEngineStudio.StudioSetupSkin(ptexturehdr, index);
-	}
-
-	void CCustomEngineStudio::StudioSetRemapColors(int top, int bottom)
-	{
-		m_pEngineStudio.StudioSetRemapColors(top, bottom);
-	}
-
-	struct model_s *CCustomEngineStudio::SetupPlayerModel(int index)
-	{
-		return m_pEngineStudio.SetupPlayerModel(index);
-	}
-
-	void CCustomEngineStudio::StudioClientEvents(void)
-	{
-		return m_pEngineStudio.StudioClientEvents();
-	}
-
-	int CCustomEngineStudio::GetForceFaceFlags(void)
-	{
-		return m_pEngineStudio.GetForceFaceFlags();
-	}
-
-	void CCustomEngineStudio::SetForceFaceFlags(int flags)
-	{
-		m_pEngineStudio.SetForceFaceFlags(flags);
-	}
-
-	void CCustomEngineStudio::StudioSetHeader(void *header)
-	{
-		m_pEngineStudio.StudioSetHeader(header);
-
-		m_pStudioHeader = (studiohdr_t *)header;
-		m_pTextureHeader = m_pStudioHeader;
-
-		if (m_pTextureHeader->numtextures == 0)
+		else
 		{
-			char texturesFilename[256];
-			strcpy(texturesFilename, m_pTextureHeader->name);
-			strcpy(&texturesFilename[strlen(texturesFilename) - 4], "T.mdl");
+			while (int triangleCount = *(pMeshTriangles++))
+			{
+				GLenum primitiveMode = GL_TRIANGLE_STRIP;
 
-			model_t *texturesModel = m_pEngineStudio.Mod_ForName(texturesFilename, false);
-			m_pTextureHeader = (studiohdr_t *)m_pEngineStudio.Mod_Extradata(texturesModel);
+				if (triangleCount < 0)
+				{
+					primitiveMode = GL_TRIANGLE_FAN;
+					triangleCount = -triangleCount;
+				}
+
+				glBegin(primitiveMode);
+				glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+
+				while (triangleCount > 0)
+				{
+					glTexCoord2f(pMeshTriangles[2] * s, pMeshTriangles[3] * t);
+
+					glVertex3fv(m_vTransformedVertices[pMeshTriangles[0]]);
+
+					triangleCount--;
+					pMeshTriangles += 4;
+				}
+
+				glEnd();
+			}
 		}
 	}
+}
 
-	void CCustomEngineStudio::SetRenderModel(struct model_s *model)
-	{
-		m_pEngineStudio.SetRenderModel(model);
-	}
+void CCustomEngineStudio::StudioDrawHulls(void)
+{
+	m_pEngineStudio.StudioDrawHulls();
+}
 
-	void CCustomEngineStudio::SetupRenderer(int rendermode)
-	{
-		m_pEngineStudio.SetupRenderer(rendermode);
-	}
+void CCustomEngineStudio::StudioDrawAbsBBox(void)
+{
+	m_pEngineStudio.StudioDrawAbsBBox();
+}
 
-	void CCustomEngineStudio::RestoreRenderer(void)
-	{
-		m_pEngineStudio.RestoreRenderer();
-	}
+void CCustomEngineStudio::StudioDrawBones(void)
+{
+	m_pEngineStudio.StudioDrawBones();
+}
 
-	void CCustomEngineStudio::SetChromeOrigin(void)
-	{
-		m_pEngineStudio.SetChromeOrigin();
-	}
+void CCustomEngineStudio::StudioSetupSkin(void *ptexturehdr, int index)
+{
+	m_pEngineStudio.StudioSetupSkin(ptexturehdr, index);
+}
 
-	int CCustomEngineStudio::IsHardware(void)
-	{
-		return m_pEngineStudio.IsHardware();
-	}
+void CCustomEngineStudio::StudioSetRemapColors(int top, int bottom)
+{
+	m_pEngineStudio.StudioSetRemapColors(top, bottom);
+}
 
-	void CCustomEngineStudio::GL_StudioDrawShadow(void)
-	{
-		m_pEngineStudio.GL_StudioDrawShadow();
-	}
+struct model_s *CCustomEngineStudio::SetupPlayerModel(int index)
+{
+	return m_pEngineStudio.SetupPlayerModel(index);
+}
 
-	void CCustomEngineStudio::GL_SetRenderMode(int mode)
-	{
-		m_pEngineStudio.GL_SetRenderMode(mode);
-	}
+void CCustomEngineStudio::StudioClientEvents(void)
+{
+	return m_pEngineStudio.StudioClientEvents();
+}
 
-	void CCustomEngineStudio::StudioSetRenderamt(int iRenderamt)
-	{
-		m_pEngineStudio.StudioSetRenderamt(iRenderamt);
-	}
+int CCustomEngineStudio::GetForceFaceFlags(void)
+{
+	return m_pEngineStudio.GetForceFaceFlags();
+}
 
-	void CCustomEngineStudio::StudioSetCullState(int iCull)
-	{
-		m_pEngineStudio.StudioSetCullState(iCull);
-	}
+void CCustomEngineStudio::SetForceFaceFlags(int flags)
+{
+	m_pEngineStudio.SetForceFaceFlags(flags);
+}
 
-	void CCustomEngineStudio::StudioRenderShadow(int iSprite, float *p1, float *p2, float *p3, float *p4)
+void CCustomEngineStudio::StudioSetHeader(void *header)
+{
+	m_pEngineStudio.StudioSetHeader(header);
+
+	m_pStudioHeader = (studiohdr_t *)header;
+	m_pTextureHeader = m_pStudioHeader;
+
+	if (m_pTextureHeader->numtextures == 0)
 	{
-		m_pEngineStudio.StudioRenderShadow(iSprite, p1, p2, p3, p4);
+		char texturesFilename[256];
+		strcpy(texturesFilename, m_pTextureHeader->name);
+		strcpy(&texturesFilename[strlen(texturesFilename) - 4], "T.mdl");
+
+		model_t *texturesModel = m_pEngineStudio.Mod_ForName(texturesFilename, false);
+		m_pTextureHeader = (studiohdr_t *)m_pEngineStudio.Mod_Extradata(texturesModel);
 	}
+}
+
+void CCustomEngineStudio::SetRenderModel(struct model_s *model)
+{
+	m_pEngineStudio.SetRenderModel(model);
+}
+
+void CCustomEngineStudio::SetupRenderer(int rendermode)
+{
+	m_pEngineStudio.SetupRenderer(rendermode);
+}
+
+void CCustomEngineStudio::RestoreRenderer(void)
+{
+	m_pEngineStudio.RestoreRenderer();
+}
+
+void CCustomEngineStudio::SetChromeOrigin(void)
+{
+	m_pEngineStudio.SetChromeOrigin();
+}
+
+int CCustomEngineStudio::IsHardware(void)
+{
+	return m_pEngineStudio.IsHardware();
+}
+
+void CCustomEngineStudio::GL_StudioDrawShadow(void)
+{
+	m_pEngineStudio.GL_StudioDrawShadow();
+}
+
+void CCustomEngineStudio::GL_SetRenderMode(int mode)
+{
+	m_pEngineStudio.GL_SetRenderMode(mode);
+}
+
+void CCustomEngineStudio::StudioSetRenderamt(int iRenderamt)
+{
+	m_pEngineStudio.StudioSetRenderamt(iRenderamt);
+}
+
+void CCustomEngineStudio::StudioSetCullState(int iCull)
+{
+	m_pEngineStudio.StudioSetCullState(iCull);
+}
+
+void CCustomEngineStudio::StudioRenderShadow(int iSprite, float *p1, float *p2, float *p3, float *p4)
+{
+	m_pEngineStudio.StudioRenderShadow(iSprite, p1, p2, p3, p4);
+}
