@@ -4,6 +4,7 @@
 #undef HSPRITE
 #endif
 
+#include "GL/glew.h"
 #include "SDL2/SDL_opengl.h"
 
 #include "hud.h"
@@ -27,9 +28,36 @@ CCustomEngineStudio::CCustomEngineStudio()
 {
 }
 
+GLuint shaderProgram;
+
 void CCustomEngineStudio::Init(struct engine_studio_api_s *pstudio)
 {
+	glewInit();
+
 	m_pCvarCustomRenderer = gEngfuncs.pfnRegisterVariable("r_customrenderer", "0", FCVAR_CLIENTDLL | FCVAR_ARCHIVE);
+
+	GLuint vertexShader, fragmentShader;
+
+	vertexShader = glCreateShaderObjectARB(GL_VERTEX_SHADER);
+	fragmentShader = glCreateShaderObjectARB(GL_FRAGMENT_SHADER);
+
+	int fileLength;
+	const char* fileContents = (const char*)gEngfuncs.COM_LoadFile("shaders/SimpleShader.vert", 5, &fileLength);
+	glShaderSourceARB(vertexShader, 1, &fileContents, &fileLength);
+	glCompileShaderARB(vertexShader);
+	gEngfuncs.COM_FreeFile((void*)fileContents);
+
+	fileContents = (const char*)gEngfuncs.COM_LoadFile("shaders/SimpleShader.frag", 5, &fileLength);
+	glShaderSourceARB(fragmentShader, 1, &fileContents, &fileLength);
+	glCompileShaderARB(fragmentShader);
+	gEngfuncs.COM_FreeFile((void*)fileContents);
+
+	shaderProgram = glCreateProgram();
+
+	glAttachShader(shaderProgram, vertexShader);
+	glAttachShader(shaderProgram, fragmentShader);
+
+	glLinkProgram(shaderProgram);
 
 	memcpy(&m_pEngineStudio, pstudio, sizeof(m_pEngineStudio));
 }
@@ -182,8 +210,6 @@ void CCustomEngineStudio::StudioSetupLighting(struct alight_s *plighting)
 	}
 }
 
-void HUD_GetLastOrg(float *org);
-
 void CCustomEngineStudio::StudioDrawPoints(void)
 {
 	if (m_pCvarCustomRenderer->value < 1)
@@ -192,6 +218,8 @@ void CCustomEngineStudio::StudioDrawPoints(void)
 
 		return;
 	}
+
+	glUseProgram(shaderProgram);
 
 	mstudiotexture_t * pTextures = (mstudiotexture_t *)((byte *)m_pTextureHeader + m_pTextureHeader->textureindex);
 	short *pSkinReferences = (short *)((byte *)m_pTextureHeader + m_pTextureHeader->skinindex);
@@ -337,6 +365,8 @@ void CCustomEngineStudio::StudioDrawPoints(void)
 			glEnd();
 		}
 	}
+
+	glUseProgram(0);
 }
 
 void CCustomEngineStudio::StudioDrawHulls(void)
