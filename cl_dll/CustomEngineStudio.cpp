@@ -109,6 +109,9 @@ struct model_s *CCustomEngineStudio::GetChromeSprite(void)
 void CCustomEngineStudio::GetModelCounters(int **s, int **a)
 {
 	m_pEngineStudio.GetModelCounters(s, a);
+
+	m_pStudioModelCount = *s;
+	m_pModelsDrawn = *a;
 }
 
 void CCustomEngineStudio::GetAliasScale(float *x, float *y)
@@ -179,6 +182,8 @@ void CCustomEngineStudio::StudioSetupLighting(struct alight_s *plighting)
 	}
 }
 
+void HUD_GetLastOrg(float *org);
+
 void CCustomEngineStudio::StudioDrawPoints(void)
 {
 	if (m_pCvarCustomRenderer->value < 1)
@@ -190,7 +195,7 @@ void CCustomEngineStudio::StudioDrawPoints(void)
 
 	mstudiotexture_t * pTextures = (mstudiotexture_t *)((byte *)m_pTextureHeader + m_pTextureHeader->textureindex);
 	short *pSkinReferences = (short *)((byte *)m_pTextureHeader + m_pTextureHeader->skinindex);
-	
+
 	if (m_pCurrentEntity->curstate.skin != 0 && m_pCurrentEntity->curstate.skin < m_pTextureHeader->numskinfamilies)
 	{
 		pSkinReferences += (m_pCurrentEntity->curstate.skin * m_pTextureHeader->numskinref);
@@ -252,7 +257,37 @@ void CCustomEngineStudio::StudioDrawPoints(void)
 			// FIX: move this check out of the inner loop
 			if (pMeshTexture->flags & STUDIO_NF_CHROME)
 			{
-				// Chrome(g_chrome[(float(*)[3])lv - g_pvlightvalues], *pnormbone, (float *)pstudionorms);
+				float n;
+				vec3_t origin, angles, forward, up, right;
+				m_pEngineStudio.GetViewInfo((float*)&origin, (float*)&forward, (float*)&right, (float*)&up);
+
+				if (m_iChromeAges[*pNormalBoneIndices] != *m_pStudioModelCount)
+				{
+					vec3_t chromeupvec;
+					vec3_t chromerightvec;
+					vec3_t tmp;
+					VectorScale(origin, -1, tmp);
+					tmp[0] += (*m_pBoneTransforms)[*pNormalBoneIndices][0][3];
+					tmp[1] += (*m_pBoneTransforms)[*pNormalBoneIndices][1][3];
+					tmp[2] += (*m_pBoneTransforms)[*pNormalBoneIndices][2][3];
+					VectorNormalize(tmp);
+					CrossProduct(tmp, right, chromeupvec);
+					VectorNormalize(chromeupvec);
+					CrossProduct(tmp, chromeupvec, chromerightvec);
+					VectorNormalize(chromerightvec);
+
+					VectorIRotate(chromeupvec, (*m_pBoneTransforms)[*pNormalBoneIndices], m_vChromeUpVectors[*pNormalBoneIndices]);
+					VectorIRotate(chromerightvec, (*m_pBoneTransforms)[*pNormalBoneIndices], m_vChromeRightVectors[*pNormalBoneIndices]);
+
+					m_iChromeAges[*pNormalBoneIndices] = *m_pStudioModelCount;
+				}
+
+				int *pChrome = m_iChromeTexCoords[pLightValues - &m_vLightValues[0]];
+				n = DotProduct(*pModelNormals, m_vChromeRightVectors[*pNormalBoneIndices]);
+				pChrome[0] = (n + 1.0) * 32;
+
+				n = DotProduct(*pModelNormals, m_vChromeUpVectors[*pNormalBoneIndices]);
+				pChrome[1] = (n + 1.0) * 32; 
 			}
 
 			pLightValues->x = lightValue * m_pLighting->color[0];
@@ -284,7 +319,14 @@ void CCustomEngineStudio::StudioDrawPoints(void)
 				vec3_t *vertexLightValue = &m_vLightValues[pMeshTriangles[1]];
 				glColor4f(vertexLightValue->x, vertexLightValue->y, vertexLightValue->z, 1.0f);
 
-				glTexCoord2f(pMeshTriangles[2] * s, pMeshTriangles[3] * t);
+				if (pMeshTexture->flags & STUDIO_NF_CHROME)
+				{
+					glTexCoord2f(m_iChromeTexCoords[pMeshTriangles[1]][0] * s, m_iChromeTexCoords[pMeshTriangles[1]][1] * t);
+				}
+				else
+				{
+					glTexCoord2f(pMeshTriangles[2] * s, pMeshTriangles[3] * t);
+				}
 
 				glVertex3fv(m_vTransformedVertices[pMeshTriangles[0]]);
 

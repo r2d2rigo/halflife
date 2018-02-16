@@ -33,6 +33,14 @@ private:
 	vec3_t m_vLightValues[MAXSTUDIOVERTS];
 	vec3_t m_vBoneLightVectors[MAXSTUDIOBONES];
 
+	int	m_iChromeTexCoords[MAXSTUDIOVERTS][2];
+	int	m_iChromeAges[MAXSTUDIOBONES];
+	vec3_t m_vChromeUpVectors[MAXSTUDIOBONES];
+	vec3_t m_vChromeRightVectors[MAXSTUDIOBONES];
+
+	int *m_pModelsDrawn;
+	int *m_pStudioModelCount;
+
 public:
 	CCustomEngineStudio(void);
 	void Init(struct engine_studio_api_s *pstudio);
