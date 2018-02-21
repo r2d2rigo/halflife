@@ -168,7 +168,9 @@ float ***CCustomEngineStudio::StudioGetAliasTransform(void)
 
 float ***CCustomEngineStudio::StudioGetRotationMatrix(void)
 {
-	return m_pEngineStudio.StudioGetRotationMatrix();
+	m_pRotationMatrix = (float(*)[3][4])m_pEngineStudio.StudioGetRotationMatrix();
+	
+	return (float***)m_pRotationMatrix;
 }
 
 void CCustomEngineStudio::StudioSetupModel(int bodypart, void **ppbodypart, void **ppsubmodel)
@@ -212,15 +214,22 @@ void CCustomEngineStudio::StudioSetupLighting(struct alight_s *plighting)
 
 void CCustomEngineStudio::StudioDrawPoints(void)
 {
-	if (m_pCvarCustomRenderer->value < 1)
+	if (m_pCvarCustomRenderer->value ==0 )
 	{
 		m_pEngineStudio.StudioDrawPoints();
-
-		return;
 	}
+	else if (m_pCvarCustomRenderer->value == 1)
+	{
+		StudioDrawPointsFixedPipeline();
+	}
+	else if (m_pCvarCustomRenderer->value == 2)
+	{
+		StudioDrawPointsProgrammablePipeline();
+	}
+}
 
-	glUseProgram(shaderProgram);
-
+void CCustomEngineStudio::StudioDrawPointsFixedPipeline(void)
+{
 	mstudiotexture_t * pTextures = (mstudiotexture_t *)((byte *)m_pTextureHeader + m_pTextureHeader->textureindex);
 	short *pSkinReferences = (short *)((byte *)m_pTextureHeader + m_pTextureHeader->skinindex);
 
@@ -265,7 +274,7 @@ void CCustomEngineStudio::StudioDrawPoints(void)
 
 				lightValue += m_pLighting->shadelight;
 
-				r = 1.45;
+				r = 1.5;
 				if (r <= 1.0) r = 1.0;
 
 				lightcos = (lightcos + (r - 1.0)) / r; 		// do modified hemispherical lighting
@@ -315,7 +324,7 @@ void CCustomEngineStudio::StudioDrawPoints(void)
 				pChrome[0] = (n + 1.0) * 32;
 
 				n = DotProduct(*pModelNormals, m_vChromeUpVectors[*pNormalBoneIndices]);
-				pChrome[1] = (n + 1.0) * 32; 
+				pChrome[1] = (n + 1.0) * 32;
 			}
 
 			pLightValues->x = lightValue * m_pLighting->color[0];
@@ -356,6 +365,142 @@ void CCustomEngineStudio::StudioDrawPoints(void)
 					glTexCoord2f(pMeshTriangles[2] * s, pMeshTriangles[3] * t);
 				}
 
+				glVertex3fv(m_vTransformedVertices[pMeshTriangles[0]]);
+
+				triangleCount--;
+				pMeshTriangles += 4;
+			}
+
+			glEnd();
+		}
+	}
+}
+
+void CCustomEngineStudio::StudioDrawPointsProgrammablePipeline(void)
+{
+	glUseProgram(shaderProgram);
+
+	mstudiotexture_t * pTextures = (mstudiotexture_t *)((byte *)m_pTextureHeader + m_pTextureHeader->textureindex);
+	short *pSkinReferences = (short *)((byte *)m_pTextureHeader + m_pTextureHeader->skinindex);
+
+	if (m_pCurrentEntity->curstate.skin != 0 && m_pCurrentEntity->curstate.skin < m_pTextureHeader->numskinfamilies)
+	{
+		pSkinReferences += (m_pCurrentEntity->curstate.skin * m_pTextureHeader->numskinref);
+	}
+
+	vec3_t *pModelVertices = (vec3_t *)((byte *)m_pStudioHeader + m_pSubModel->vertindex);
+	byte *pVertexBoneIndices = ((byte *)m_pStudioHeader + m_pSubModel->vertinfoindex);
+
+	vec3_t *pModelNormals = (vec3_t *)((byte *)m_pStudioHeader + m_pSubModel->normindex);
+	byte *pNormalBoneIndices = ((byte *)m_pStudioHeader + m_pSubModel->norminfoindex);
+
+	for (int i = 0; i < m_pSubModel->numverts; i++)
+	{
+		VectorTransform(pModelVertices[i], (*m_pBoneTransforms)[pVertexBoneIndices[i]], m_vTransformedVertices[i]);
+	}
+
+	for (int i = 0; i < m_pSubModel->numnorms; i++)
+	{
+		VectorRotate(pModelNormals[i], (*m_pBoneTransforms)[pNormalBoneIndices[i]], m_vTransformedNormals[i]);
+	}
+
+	vec3_t *pLightValues = &m_vLightValues[0];
+
+	for (int i = 0; i < m_pSubModel->nummesh; i++)
+	{
+		mstudiomesh_t *pSubModelMesh = (mstudiomesh_t *)((byte *)m_pStudioHeader + m_pSubModel->meshindex) + i;
+		mstudiotexture_t *pMeshTexture = &pTextures[pSkinReferences[pSubModelMesh->skinref]];
+
+		for (int j = 0; j < pSubModelMesh->numnorms; j++, pLightValues++, pModelNormals++, pNormalBoneIndices++)
+		{
+			// FIX: move this check out of the inner loop
+			if (pMeshTexture->flags & STUDIO_NF_CHROME)
+			{
+				float n;
+				vec3_t origin, angles, forward, up, right;
+				m_pEngineStudio.GetViewInfo((float*)&origin, (float*)&forward, (float*)&right, (float*)&up);
+
+				if (m_iChromeAges[*pNormalBoneIndices] != *m_pStudioModelCount)
+				{
+					vec3_t chromeupvec;
+					vec3_t chromerightvec;
+					vec3_t tmp;
+					VectorScale(origin, -1, tmp);
+					tmp[0] += (*m_pBoneTransforms)[*pNormalBoneIndices][0][3];
+					tmp[1] += (*m_pBoneTransforms)[*pNormalBoneIndices][1][3];
+					tmp[2] += (*m_pBoneTransforms)[*pNormalBoneIndices][2][3];
+					VectorNormalize(tmp);
+					CrossProduct(tmp, right, chromeupvec);
+					VectorNormalize(chromeupvec);
+					CrossProduct(tmp, chromeupvec, chromerightvec);
+					VectorNormalize(chromerightvec);
+
+					VectorIRotate(chromeupvec, (*m_pBoneTransforms)[*pNormalBoneIndices], m_vChromeUpVectors[*pNormalBoneIndices]);
+					VectorIRotate(chromerightvec, (*m_pBoneTransforms)[*pNormalBoneIndices], m_vChromeRightVectors[*pNormalBoneIndices]);
+
+					m_iChromeAges[*pNormalBoneIndices] = *m_pStudioModelCount;
+				}
+
+				int *pChrome = m_iChromeTexCoords[pLightValues - &m_vLightValues[0]];
+				n = DotProduct(*pModelNormals, m_vChromeRightVectors[*pNormalBoneIndices]);
+				pChrome[0] = (n + 1.0) * 32;
+
+				n = DotProduct(*pModelNormals, m_vChromeUpVectors[*pNormalBoneIndices]);
+				pChrome[1] = (n + 1.0) * 32;
+			}
+		}
+
+		short *pMeshTriangles = (short *)((byte *)m_pStudioHeader + pSubModelMesh->triindex);
+
+		float s = 1.0 / (float)pMeshTexture->width;
+		float t = 1.0 / (float)pMeshTexture->height;
+
+		glBindTexture(GL_TEXTURE_2D, pMeshTexture->index);
+
+		GLint ambientLightLocation = glGetUniformLocation(shaderProgram, "AmbientLight");
+		GLint shadeLightLocation = glGetUniformLocation(shaderProgram, "ShadeLight");
+		GLint lightDirLocation = glGetUniformLocation(shaderProgram, "LightDir");
+		GLint lightColorLocation = glGetUniformLocation(shaderProgram, "LightColor");
+
+		/*
+		* TODO: take into account flat shaded surfaces
+		if (pMeshTexture->flags & STUDIO_NF_FLATSHADE)
+		{
+			lightValue += m_pLighting->shadelight * 0.8;
+		}
+		*/
+
+		glUniform1f(ambientLightLocation, m_pLighting->ambientlight / 255.0f);
+		glUniform1f(shadeLightLocation, m_pLighting->shadelight / 255.0f);
+		glUniform3fv(lightDirLocation, 1, m_pLighting->plightvec);
+		glUniform3fv(lightColorLocation, 1, m_pLighting->color);
+
+		while (int triangleCount = *(pMeshTriangles++))
+		{
+			GLenum primitiveMode = GL_TRIANGLE_STRIP;
+
+			if (triangleCount < 0)
+			{
+				primitiveMode = GL_TRIANGLE_FAN;
+				triangleCount = -triangleCount;
+			}
+
+			glBegin(primitiveMode);
+
+			while (triangleCount > 0)
+			{
+				vec3_t *vertexLightValue = &m_vLightValues[pMeshTriangles[1]];
+
+				if (pMeshTexture->flags & STUDIO_NF_CHROME)
+				{
+					glTexCoord2f(m_iChromeTexCoords[pMeshTriangles[1]][0] * s, m_iChromeTexCoords[pMeshTriangles[1]][1] * t);
+				}
+				else
+				{
+					glTexCoord2f(pMeshTriangles[2] * s, pMeshTriangles[3] * t);
+				}
+
+				glNormal3fv(m_vTransformedNormals[pMeshTriangles[1]]);
 				glVertex3fv(m_vTransformedVertices[pMeshTriangles[0]]);
 
 				triangleCount--;

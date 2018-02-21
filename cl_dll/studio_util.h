@@ -30,6 +30,7 @@
 void	AngleMatrix (const float *angles, float (*matrix)[4] );
 int		VectorCompare (const float *v1, const float *v2);
 void	CrossProduct (const float *v1, const float *v2, float *cross);
+void	VectorRotate(const vec3_t in1, const float in2[3][4], vec3_t &out); 
 void	VectorIRotate(const vec3_t in1, const float in2[3][4], vec3_t &out);
 void	VectorTransform (const float *in1, float in2[3][4], float *out);
 void	ConcatTransforms (float in1[3][4], float in2[3][4], float out[3][4]);

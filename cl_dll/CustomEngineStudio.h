@@ -27,9 +27,11 @@ private:
 	mstudiomodel_t *m_pSubModel;
 	alight_t *m_pLighting;
 
+	float (*m_pRotationMatrix)[3][4];
 	float (*m_pBoneTransforms)[MAXSTUDIOBONES][3][4];
 	float (*m_pLightTransforms)[MAXSTUDIOBONES][3][4];
 	vec3_t m_vTransformedVertices[MAXSTUDIOVERTS];
+	vec3_t m_vTransformedNormals[MAXSTUDIOVERTS];
 	vec3_t m_vLightValues[MAXSTUDIOVERTS];
 	vec3_t m_vBoneLightVectors[MAXSTUDIOBONES];
 
@@ -101,6 +103,9 @@ public:
 	void StudioSetRenderamt(int iRenderamt);
 	void StudioSetCullState(int iCull);
 	void StudioRenderShadow(int iSprite, float *p1, float *p2, float *p3, float *p4);
+
+	void StudioDrawPointsFixedPipeline(void);
+	void StudioDrawPointsProgrammablePipeline(void);
 };
 
 #endif // CUSTOMENGINESTUDIO_H

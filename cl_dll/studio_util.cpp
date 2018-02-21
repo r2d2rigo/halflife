@@ -78,6 +78,12 @@ void CrossProduct (const float *v1, const float *v2, float *cross)
 	cross[2] = v1[0]*v2[1] - v1[1]*v2[0];
 }
 
+void VectorRotate(const vec3_t in1, const float in2[3][4], vec3_t &out)
+{
+	out[0] = DotProduct(in1, in2[0]);
+	out[1] = DotProduct(in1, in2[1]);
+	out[2] = DotProduct(in1, in2[2]);
+}
 
 void VectorIRotate(const vec3_t in1, const float in2[3][4], vec3_t &out)
 {
