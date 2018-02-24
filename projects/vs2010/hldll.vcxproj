@@ -127,6 +127,7 @@ call ..\..\filecopy.bat $(TargetDir)\$(TargetName).pdb ..\..\..\game\mod\dlls\$(
     <ClCompile Include="..\..\dlls\doors.cpp" />
     <ClCompile Include="..\..\dlls\effects.cpp" />
     <ClCompile Include="..\..\dlls\egon.cpp" />
+    <ClCompile Include="..\..\dlls\env_model.cpp" />
     <ClCompile Include="..\..\dlls\explode.cpp" />
     <ClCompile Include="..\..\dlls\flyingmonster.cpp" />
     <ClCompile Include="..\..\dlls\func_break.cpp" />
@@ -221,6 +222,7 @@ call ..\..\filecopy.bat $(TargetDir)\$(TargetName).pdb ..\..\..\game\mod\dlls\$(
     <ClInclude Include="..\..\dlls\doors.h" />
     <ClInclude Include="..\..\dlls\effects.h" />
     <ClInclude Include="..\..\dlls\enginecallback.h" />
+    <ClInclude Include="..\..\dlls\env_model.h" />
     <ClInclude Include="..\..\dlls\explode.h" />
     <ClInclude Include="..\..\dlls\extdll.h" />
     <ClInclude Include="..\..\dlls\flyingmonster.h" />
