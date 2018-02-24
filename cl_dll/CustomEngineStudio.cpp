@@ -52,35 +52,35 @@ void CCustomEngineStudio::Init(struct engine_studio_api_s *pstudio)
 
 	textureFileContents = gEngfuncs.COM_LoadFile("cubemaps/desertup.png", 5, &textureLength);
 	textureData = stbi_load_from_memory((const stbi_uc*)textureFileContents, textureLength, &textureWidth, &textureHeight, &channelCount, 3);
-	glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Z, 0, GL_RGBA, textureWidth, textureHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, textureData);
+	glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, GL_RGBA, textureWidth, textureHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, textureData);
 	stbi_image_free(textureData);
 	gEngfuncs.COM_FreeFile(textureFileContents);
 
 	textureFileContents = gEngfuncs.COM_LoadFile("cubemaps/desertdn.png", 5, &textureLength);
 	textureData = stbi_load_from_memory((const stbi_uc*)textureFileContents, textureLength, &textureWidth, &textureHeight, &channelCount, 3);
-	glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, GL_RGBA, textureWidth, textureHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, textureData);
-	stbi_image_free(textureData);
-	gEngfuncs.COM_FreeFile(textureFileContents);
-
-	textureFileContents = gEngfuncs.COM_LoadFile("cubemaps/desertlf.png", 5, &textureLength);
-	textureData = stbi_load_from_memory((const stbi_uc*)textureFileContents, textureLength, &textureWidth, &textureHeight, &channelCount, 3);
-	glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Y, 0, GL_RGBA, textureWidth, textureHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, textureData);
-	stbi_image_free(textureData);
-	gEngfuncs.COM_FreeFile(textureFileContents);
-
-	textureFileContents = gEngfuncs.COM_LoadFile("cubemaps/desertrt.png", 5, &textureLength);
-	textureData = stbi_load_from_memory((const stbi_uc*)textureFileContents, textureLength, &textureWidth, &textureHeight, &channelCount, 3);
-	glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, 0, GL_RGBA, textureWidth, textureHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, textureData);
+	glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Z, 0, GL_RGBA, textureWidth, textureHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, textureData);
 	stbi_image_free(textureData);
 	gEngfuncs.COM_FreeFile(textureFileContents);
 
 	textureFileContents = gEngfuncs.COM_LoadFile("cubemaps/desertft.png", 5, &textureLength);
 	textureData = stbi_load_from_memory((const stbi_uc*)textureFileContents, textureLength, &textureWidth, &textureHeight, &channelCount, 3);
-	glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X, 0, GL_RGBA, textureWidth, textureHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, textureData);
+	glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Y, 0, GL_RGBA, textureWidth, textureHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, textureData);
 	stbi_image_free(textureData);
 	gEngfuncs.COM_FreeFile(textureFileContents);
 
 	textureFileContents = gEngfuncs.COM_LoadFile("cubemaps/desertbk.png", 5, &textureLength);
+	textureData = stbi_load_from_memory((const stbi_uc*)textureFileContents, textureLength, &textureWidth, &textureHeight, &channelCount, 3);
+	glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, 0, GL_RGBA, textureWidth, textureHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, textureData);
+	stbi_image_free(textureData);
+	gEngfuncs.COM_FreeFile(textureFileContents);
+
+	textureFileContents = gEngfuncs.COM_LoadFile("cubemaps/desertlf.png", 5, &textureLength);
+	textureData = stbi_load_from_memory((const stbi_uc*)textureFileContents, textureLength, &textureWidth, &textureHeight, &channelCount, 3);
+	glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X, 0, GL_RGBA, textureWidth, textureHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, textureData);
+	stbi_image_free(textureData);
+	gEngfuncs.COM_FreeFile(textureFileContents);
+
+	textureFileContents = gEngfuncs.COM_LoadFile("cubemaps/desertrt.png", 5, &textureLength);
 	textureData = stbi_load_from_memory((const stbi_uc*)textureFileContents, textureLength, &textureWidth, &textureHeight, &channelCount, 3);
 	glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_X, 0, GL_RGBA, textureWidth, textureHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, textureData);
 	stbi_image_free(textureData);
@@ -533,6 +533,7 @@ void CCustomEngineStudio::StudioDrawPointsProgrammablePipeline(void)
 		GLint lightDirLocation = glGetUniformLocation(shaderProgram, "LightDir");
 		GLint lightColorLocation = glGetUniformLocation(shaderProgram, "LightColor");
 		GLint cubemapAmountLocation = glGetUniformLocation(shaderProgram, "CubemapAmount");
+		GLint cameraPosLocation = glGetUniformLocation(shaderProgram, "CameraPos");
 
 		/*
 		* TODO: take into account flat shaded surfaces
@@ -547,13 +548,17 @@ void CCustomEngineStudio::StudioDrawPointsProgrammablePipeline(void)
 		glUniform3fv(lightDirLocation, 1, m_pLighting->plightvec);
 		glUniform3fv(lightColorLocation, 1, m_pLighting->color);
 
+		vec3_t origin, angles, forward, up, right;
+		m_pEngineStudio.GetViewInfo((float*)&origin, (float*)&forward, (float*)&right, (float*)&up);
+		glUniform3fv(cameraPosLocation, 1, (float*)&origin);
+
 		if (pMeshTexture->flags & STUDIO_NF_CHROME)
 		{
-			glUniform1f(cubemapAmountLocation, 0.5f);
+			glUniform1f(cubemapAmountLocation, m_pLighting->ambientlight / 128.0f);
 		}
 		else
 		{
-			glUniform1f(cubemapAmountLocation, 0.0f);
+			glUniform1f(cubemapAmountLocation, 0);
 		}
 
 		while (int triangleCount = *(pMeshTriangles++))
@@ -574,7 +579,8 @@ void CCustomEngineStudio::StudioDrawPointsProgrammablePipeline(void)
 
 				if (pMeshTexture->flags & STUDIO_NF_CHROME)
 				{
-					glTexCoord2f(m_iChromeTexCoords[pMeshTriangles[1]][0] * s, m_iChromeTexCoords[pMeshTriangles[1]][1] * t);
+					// glTexCoord2f(m_iChromeTexCoords[pMeshTriangles[1]][0] * s, m_iChromeTexCoords[pMeshTriangles[1]][1] * t);
+					glTexCoord2f(pMeshTriangles[2] * s, pMeshTriangles[3] * t);
 				}
 				else
 				{
