@@ -534,6 +534,7 @@ void CCustomEngineStudio::StudioDrawPointsProgrammablePipeline(void)
 		GLint lightColorLocation = glGetUniformLocation(shaderProgram, "LightColor");
 		GLint cubemapAmountLocation = glGetUniformLocation(shaderProgram, "CubemapAmount");
 		GLint cameraPosLocation = glGetUniformLocation(shaderProgram, "CameraPos");
+		GLint ambientCubeLocation = glGetUniformLocation(shaderProgram, "AmbientCube");
 
 		/*
 		* TODO: take into account flat shaded surfaces
@@ -547,6 +548,60 @@ void CCustomEngineStudio::StudioDrawPointsProgrammablePipeline(void)
 		glUniform1f(shadeLightLocation, m_pLighting->shadelight / 255.0f);
 		glUniform3fv(lightDirLocation, 1, m_pLighting->plightvec);
 		glUniform3fv(lightColorLocation, 1, m_pLighting->color);
+
+		float cubeValues[6 * 3];
+
+		cubeValues[0] = 116.0f / 255.0f;
+		cubeValues[1] = 129.0f / 255.0f;
+		cubeValues[2] = 152.0f / 255.0f;
+
+		cubeValues[3] = 112.0f / 255.0f;
+		cubeValues[4] = 124.0f / 255.0f;
+		cubeValues[5] = 147.0f / 255.0f;
+
+		cubeValues[6] = 117.0f / 255.0f;
+		cubeValues[7] = 116.0f / 255.0f;
+		cubeValues[8] = 128.0f / 255.0f;
+
+		cubeValues[9] = 106.0f / 255.0f;
+		cubeValues[10] = 116.0f / 255.0f;
+		cubeValues[11] = 141.0f / 255.0f;
+
+		cubeValues[12] = 173.0f / 255.0f;
+		cubeValues[13] = 207.0f / 255.0f;
+		cubeValues[14] = 255.0f / 255.0f;
+
+		cubeValues[15] = 114.0f / 255.0f;
+		cubeValues[16] = 93.0f / 255.0f;
+		cubeValues[17] = 79.0f / 255.0f;
+
+		/*
+		cubeValues[0] = 1.0f;
+		cubeValues[1] = 0.0f;
+		cubeValues[2] = 0.0f;
+
+		cubeValues[3] = 1.0f;
+		cubeValues[4] = 1.0f;
+		cubeValues[5] = 0.0f;
+
+		cubeValues[6] = 0.0f;
+		cubeValues[7] = 1.0f;
+		cubeValues[8] = 0.0f;
+
+		cubeValues[9] = 0.0f;
+		cubeValues[10] = 1.0f;
+		cubeValues[11] = 1.0f;
+
+		cubeValues[12] = 0.0f;
+		cubeValues[13] = 0.0f;
+		cubeValues[14] = 1.0f;
+
+		cubeValues[15] = 1.0f;
+		cubeValues[16] = 0.0f;
+		cubeValues[17] = 1.0f;
+		*/
+
+		glUniform3fv(ambientCubeLocation, 6, &cubeValues[0]);
 
 		vec3_t origin, angles, forward, up, right;
 		m_pEngineStudio.GetViewInfo((float*)&origin, (float*)&forward, (float*)&right, (float*)&up);
