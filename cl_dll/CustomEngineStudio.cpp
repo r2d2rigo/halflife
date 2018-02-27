@@ -25,6 +25,9 @@
 
 #include "studio_util.h"
 #include "CustomEngineStudio.h"
+#include "TextureManager.h"
+
+extern CTextureManager TextureManager;
 
 CCustomEngineStudio::CCustomEngineStudio()
 {
@@ -39,58 +42,7 @@ void CCustomEngineStudio::Init(struct engine_studio_api_s *pstudio)
 
 	m_pCvarCustomRenderer = gEngfuncs.pfnRegisterVariable("r_customrenderer", "0", FCVAR_CLIENTDLL | FCVAR_ARCHIVE);
 
-	byte *textureFileContents;
-	int textureLength;
-	int textureWidth;
-	int textureHeight;
-	int channelCount;
-	stbi_uc *textureData;
-
-	glGenTextures(1, &cubemapTexture);
-	// glEnable(GL_TEXTURE_CUBE_MAP);
-	glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
-
-	textureFileContents = gEngfuncs.COM_LoadFile("cubemaps/desertup.png", 5, &textureLength);
-	textureData = stbi_load_from_memory((const stbi_uc*)textureFileContents, textureLength, &textureWidth, &textureHeight, &channelCount, 3);
-	glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, GL_RGBA, textureWidth, textureHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, textureData);
-	stbi_image_free(textureData);
-	gEngfuncs.COM_FreeFile(textureFileContents);
-
-	textureFileContents = gEngfuncs.COM_LoadFile("cubemaps/desertdn.png", 5, &textureLength);
-	textureData = stbi_load_from_memory((const stbi_uc*)textureFileContents, textureLength, &textureWidth, &textureHeight, &channelCount, 3);
-	glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Z, 0, GL_RGBA, textureWidth, textureHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, textureData);
-	stbi_image_free(textureData);
-	gEngfuncs.COM_FreeFile(textureFileContents);
-
-	textureFileContents = gEngfuncs.COM_LoadFile("cubemaps/desertft.png", 5, &textureLength);
-	textureData = stbi_load_from_memory((const stbi_uc*)textureFileContents, textureLength, &textureWidth, &textureHeight, &channelCount, 3);
-	glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Y, 0, GL_RGBA, textureWidth, textureHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, textureData);
-	stbi_image_free(textureData);
-	gEngfuncs.COM_FreeFile(textureFileContents);
-
-	textureFileContents = gEngfuncs.COM_LoadFile("cubemaps/desertbk.png", 5, &textureLength);
-	textureData = stbi_load_from_memory((const stbi_uc*)textureFileContents, textureLength, &textureWidth, &textureHeight, &channelCount, 3);
-	glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, 0, GL_RGBA, textureWidth, textureHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, textureData);
-	stbi_image_free(textureData);
-	gEngfuncs.COM_FreeFile(textureFileContents);
-
-	textureFileContents = gEngfuncs.COM_LoadFile("cubemaps/desertlf.png", 5, &textureLength);
-	textureData = stbi_load_from_memory((const stbi_uc*)textureFileContents, textureLength, &textureWidth, &textureHeight, &channelCount, 3);
-	glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X, 0, GL_RGBA, textureWidth, textureHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, textureData);
-	stbi_image_free(textureData);
-	gEngfuncs.COM_FreeFile(textureFileContents);
-
-	textureFileContents = gEngfuncs.COM_LoadFile("cubemaps/desertrt.png", 5, &textureLength);
-	textureData = stbi_load_from_memory((const stbi_uc*)textureFileContents, textureLength, &textureWidth, &textureHeight, &channelCount, 3);
-	glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_X, 0, GL_RGBA, textureWidth, textureHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, textureData);
-	stbi_image_free(textureData);
-	gEngfuncs.COM_FreeFile(textureFileContents);
-
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	cubemapTexture = TextureManager.LoadCubemap("desert");
 
 	GLuint vertexShader, fragmentShader;
 
@@ -551,6 +503,7 @@ void CCustomEngineStudio::StudioDrawPointsProgrammablePipeline(void)
 
 		float cubeValues[6 * 3];
 
+		/*
 		cubeValues[0] = 116.0f / 255.0f;
 		cubeValues[1] = 129.0f / 255.0f;
 		cubeValues[2] = 152.0f / 255.0f;
@@ -574,7 +527,12 @@ void CCustomEngineStudio::StudioDrawPointsProgrammablePipeline(void)
 		cubeValues[15] = 114.0f / 255.0f;
 		cubeValues[16] = 93.0f / 255.0f;
 		cubeValues[17] = 79.0f / 255.0f;
+		*/
 
+		for (int i = 0; i < 6 * 3; i++)
+		{
+			cubeValues[i] = 0.1f;
+		}
 		/*
 		cubeValues[0] = 1.0f;
 		cubeValues[1] = 0.0f;

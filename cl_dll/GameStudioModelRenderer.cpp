@@ -28,6 +28,9 @@
 #include "GameStudioModelRenderer.h"
 #include "Exports.h"
 #include "CustomEngineStudio.h"
+#include "RendererCvars.h"
+#include "GlAPI.h"
+#include "TextureManager.h"
 
 //
 // Override the StudioModelRender virtual member functions here to implement custom bone
@@ -36,6 +39,9 @@
 
 // Global engine <-> studio model rendering code interface
 extern CCustomEngineStudio IEngineStudio;
+CRendererCvars RendererCvars;
+CGlAPI GlAPI;
+CTextureManager TextureManager;
 
 // The renderer object, created on the stack.
 CGameStudioModelRenderer g_StudioRenderer;
@@ -111,6 +117,8 @@ int CL_DLLEXPORT HUD_GetStudioModelInterface( int version, struct r_studio_inter
 
 	// Point the engine to our callbacks
 	*ppinterface = &studio;
+
+	RendererCvars.RegisterCvars();
 
 	// Copy in engine helper functions
 	// memcpy( &IEngineStudio, pstudio, sizeof( IEngineStudio ) );
