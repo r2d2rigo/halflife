@@ -77,6 +77,11 @@ void CCustomEngineStudio::Init(struct engine_studio_api_s *pstudio)
 	memcpy(&m_pEngineStudio, pstudio, sizeof(m_pEngineStudio));
 }
 
+void CCustomEngineStudio::Reset()
+{
+	cubemapTexture = TextureManager.LoadCubemap("desert");
+}
+
 void *CCustomEngineStudio::Mem_Calloc(int number, size_t size)
 {
 	return m_pEngineStudio.Mem_Calloc(number, size);

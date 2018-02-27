@@ -27,6 +27,7 @@ private:
 
 public:
 	CTextureManager(void);
+	void Reset(void);
 
 	const GLuint& LoadCubemap(const std::string &cubemapName);
 };

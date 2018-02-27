@@ -46,6 +46,12 @@ extern "C"
 #include "vgui_TeamFortressViewport.h"
 #include "../public/interface.h"
 
+#include "TextureManager.h"
+#include "CustomEngineStudio.h"
+
+extern CTextureManager TextureManager;
+extern CCustomEngineStudio IEngineStudio;
+
 cl_enginefunc_t gEngfuncs;
 CHud gHUD;
 TeamFortressViewport *gViewPort = NULL;
@@ -177,6 +183,9 @@ int CL_DLLEXPORT HUD_VidInit( void )
 	gHUD.VidInit();
 
 	VGui_Startup();
+
+	TextureManager.Reset();
+	IEngineStudio.Reset();
 
 	return 1;
 }

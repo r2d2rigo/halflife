@@ -19,6 +19,16 @@ CTextureManager::CTextureManager(void)
 {
 }
 
+void CTextureManager::Reset(void)
+{
+	for (std::map<std::string, GLuint>::iterator textureHandle = _textureHandles.begin(); textureHandle != _textureHandles.end(); ++textureHandle)
+	{
+		glDeleteTextures(1, &textureHandle->second);
+	}
+
+	_textureHandles.clear();
+}
+
 const GLuint& CTextureManager::LoadCubemap(const std::string &cubemapName)
 {
 	GLuint textureHandle;

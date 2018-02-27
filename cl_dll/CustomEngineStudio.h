@@ -6,6 +6,7 @@
 
 #include "studio.h"
 #include "r_studioint.h"
+#include "com_model.h"
 
 /*
 ====================
@@ -46,6 +47,7 @@ private:
 public:
 	CCustomEngineStudio(void);
 	void Init(struct engine_studio_api_s *pstudio);
+	void Reset();
 
 public:
 	void *Mem_Calloc(int number, size_t size);
