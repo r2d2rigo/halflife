@@ -51,6 +51,7 @@ extern DLL_GLOBAL ULONG		g_ulFrameCount;
 
 extern void CopyToBodyQue(entvars_t* pev);
 extern int giPrecacheGrunt;
+extern int giPrecacheAlienGrunt;
 extern int gmsgSayText;
 
 extern cvar_t allow_spectators;
@@ -912,6 +913,9 @@ void ClientPrecache( void )
 
 	if (giPrecacheGrunt)
 		UTIL_PrecacheOther("monster_human_grunt");
+
+	if (giPrecacheAlienGrunt)
+		UTIL_PrecacheOther("monster_alien_grunt");
 }
 
 /*

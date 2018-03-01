@@ -26,6 +26,7 @@
 #include "studio_util.h"
 #include "CustomEngineStudio.h"
 #include "TextureManager.h"
+#include "BspFile.h"
 
 extern CTextureManager TextureManager;
 
@@ -34,15 +35,12 @@ CCustomEngineStudio::CCustomEngineStudio()
 }
 
 GLuint shaderProgram;
-GLuint cubemapTexture;
 
 void CCustomEngineStudio::Init(struct engine_studio_api_s *pstudio)
 {
 	glewInit();
 
 	m_pCvarCustomRenderer = gEngfuncs.pfnRegisterVariable("r_customrenderer", "0", FCVAR_CLIENTDLL | FCVAR_ARCHIVE);
-
-	cubemapTexture = TextureManager.LoadCubemap("desert");
 
 	GLuint vertexShader, fragmentShader;
 
@@ -79,7 +77,21 @@ void CCustomEngineStudio::Init(struct engine_studio_api_s *pstudio)
 
 void CCustomEngineStudio::Reset()
 {
-	cubemapTexture = TextureManager.LoadCubemap("desert");
+	CBspFile bspFile;
+	bspFile.LoadBsp("test\\maps\\stalkyard_output.bsp");
+
+	cubemapcount = bspFile.Cubemaps.size();
+	cubemaps = new cubemap_t[cubemapcount];
+	for (int i = 0; i < cubemapcount; i++)
+	{
+		cubemaps[i] = cubemap_t();
+	}
+
+	for (int i = 0; i < cubemapcount; i++)
+	{
+		cubemaps[i].position = Vector(bspFile.Cubemaps[i].Position[0], bspFile.Cubemaps[i].Position[1], bspFile.Cubemaps[i].Position[2]);
+		cubemaps[i].texture = TextureManager.LoadCubemap(bspFile.Cubemaps[i]);
+	}
 }
 
 void *CCustomEngineStudio::Mem_Calloc(int number, size_t size)
@@ -189,7 +201,7 @@ float ***CCustomEngineStudio::StudioGetAliasTransform(void)
 float ***CCustomEngineStudio::StudioGetRotationMatrix(void)
 {
 	m_pRotationMatrix = (float(*)[3][4])m_pEngineStudio.StudioGetRotationMatrix();
-	
+
 	return (float***)m_pRotationMatrix;
 }
 
@@ -234,7 +246,7 @@ void CCustomEngineStudio::StudioSetupLighting(struct alight_s *plighting)
 
 void CCustomEngineStudio::StudioDrawPoints(void)
 {
-	if (m_pCvarCustomRenderer->value ==0 )
+	if (m_pCvarCustomRenderer->value == 0)
 	{
 		m_pEngineStudio.StudioDrawPoints();
 	}
@@ -426,6 +438,17 @@ void CCustomEngineStudio::StudioDrawPointsProgrammablePipeline(void)
 
 	vec3_t *pLightValues = &m_vLightValues[0];
 
+	float cubemapDistance = 99999;
+	cubemap_t *nearestCubemap = &cubemaps[0];
+	for (int i = 0; i < cubemapcount; i++)
+	{
+		if ((m_pCurrentEntity->origin - cubemaps[i].position).Length() < cubemapDistance)
+		{
+			nearestCubemap = &cubemaps[i];
+			cubemapDistance = (m_pCurrentEntity->origin - nearestCubemap->position).Length();
+		}
+	}
+
 	for (int i = 0; i < m_pSubModel->nummesh; i++)
 	{
 		mstudiomesh_t *pSubModelMesh = (mstudiomesh_t *)((byte *)m_pStudioHeader + m_pSubModel->meshindex) + i;
@@ -483,7 +506,7 @@ void CCustomEngineStudio::StudioDrawPointsProgrammablePipeline(void)
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, pMeshTexture->index);
 		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
+		glBindTexture(GL_TEXTURE_CUBE_MAP, nearestCubemap->texture);
 
 		GLint ambientLightLocation = glGetUniformLocation(shaderProgram, "AmbientLight");
 		GLint shadeLightLocation = glGetUniformLocation(shaderProgram, "ShadeLight");
@@ -497,7 +520,7 @@ void CCustomEngineStudio::StudioDrawPointsProgrammablePipeline(void)
 		* TODO: take into account flat shaded surfaces
 		if (pMeshTexture->flags & STUDIO_NF_FLATSHADE)
 		{
-			lightValue += m_pLighting->shadelight * 0.8;
+		lightValue += m_pLighting->shadelight * 0.8;
 		}
 		*/
 
@@ -508,61 +531,10 @@ void CCustomEngineStudio::StudioDrawPointsProgrammablePipeline(void)
 
 		float cubeValues[6 * 3];
 
-		/*
-		cubeValues[0] = 116.0f / 255.0f;
-		cubeValues[1] = 129.0f / 255.0f;
-		cubeValues[2] = 152.0f / 255.0f;
-
-		cubeValues[3] = 112.0f / 255.0f;
-		cubeValues[4] = 124.0f / 255.0f;
-		cubeValues[5] = 147.0f / 255.0f;
-
-		cubeValues[6] = 117.0f / 255.0f;
-		cubeValues[7] = 116.0f / 255.0f;
-		cubeValues[8] = 128.0f / 255.0f;
-
-		cubeValues[9] = 106.0f / 255.0f;
-		cubeValues[10] = 116.0f / 255.0f;
-		cubeValues[11] = 141.0f / 255.0f;
-
-		cubeValues[12] = 173.0f / 255.0f;
-		cubeValues[13] = 207.0f / 255.0f;
-		cubeValues[14] = 255.0f / 255.0f;
-
-		cubeValues[15] = 114.0f / 255.0f;
-		cubeValues[16] = 93.0f / 255.0f;
-		cubeValues[17] = 79.0f / 255.0f;
-		*/
-
 		for (int i = 0; i < 6 * 3; i++)
 		{
 			cubeValues[i] = 0.1f;
 		}
-		/*
-		cubeValues[0] = 1.0f;
-		cubeValues[1] = 0.0f;
-		cubeValues[2] = 0.0f;
-
-		cubeValues[3] = 1.0f;
-		cubeValues[4] = 1.0f;
-		cubeValues[5] = 0.0f;
-
-		cubeValues[6] = 0.0f;
-		cubeValues[7] = 1.0f;
-		cubeValues[8] = 0.0f;
-
-		cubeValues[9] = 0.0f;
-		cubeValues[10] = 1.0f;
-		cubeValues[11] = 1.0f;
-
-		cubeValues[12] = 0.0f;
-		cubeValues[13] = 0.0f;
-		cubeValues[14] = 1.0f;
-
-		cubeValues[15] = 1.0f;
-		cubeValues[16] = 0.0f;
-		cubeValues[17] = 1.0f;
-		*/
 
 		glUniform3fv(ambientCubeLocation, 6, &cubeValues[0]);
 
@@ -572,11 +544,12 @@ void CCustomEngineStudio::StudioDrawPointsProgrammablePipeline(void)
 
 		if (pMeshTexture->flags & STUDIO_NF_CHROME)
 		{
-			glUniform1f(cubemapAmountLocation, m_pLighting->ambientlight / 128.0f);
+			// glUniform1f(cubemapAmountLocation, m_pLighting->ambientlight / 128.0f);
+			glUniform1f(cubemapAmountLocation, 0.8f);
 		}
 		else
 		{
-			glUniform1f(cubemapAmountLocation, 0);
+			glUniform1f(cubemapAmountLocation, 0.1f);
 		}
 
 		while (int triangleCount = *(pMeshTriangles++))

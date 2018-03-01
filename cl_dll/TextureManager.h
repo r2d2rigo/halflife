@@ -13,6 +13,7 @@
 #include <vector>
 #include <map>
 #include "SDL2/SDL_opengl.h"
+#include "BspFile.h"
 
 class CTextureManager
 {
@@ -30,6 +31,7 @@ public:
 	void Reset(void);
 
 	const GLuint& LoadCubemap(const std::string &cubemapName);
+	const GLuint& LoadCubemap(const BspCubemap &cubemap);
 };
 
 #endif

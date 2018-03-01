@@ -59,3 +59,32 @@ const GLuint& CTextureManager::LoadCubemap(const std::string &cubemapName)
 
 	return textureHandle;
 }
+
+const GLuint& CTextureManager::LoadCubemap(const BspCubemap &cubemap)
+{
+	GLuint textureHandle;
+	byte *textureFileContents;
+	int textureLength;
+	int textureWidth;
+	int textureHeight;
+	int channelCount;
+	stbi_uc *textureData;
+
+	glGenTextures(1, &textureHandle);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, textureHandle);
+
+	for (int i = 0; i < 6; i++)
+	{
+		int faceOffset = i * (cubemap.Size * cubemap.Size * 3);
+
+		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGBA, cubemap.Size, cubemap.Size, 0, GL_RGB, GL_UNSIGNED_BYTE, &(cubemap.Data[faceOffset]));
+	}
+
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+	return textureHandle;
+}

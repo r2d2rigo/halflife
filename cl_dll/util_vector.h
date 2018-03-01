@@ -1,3 +1,9 @@
+#if !defined( UTIL_VECTOR_H )
+#define UTIL_VECTOR_H
+#if defined( _WIN32 )
+#pragma once
+#endif
+
 /***
 *
 *	Copyright (c) 1996-2002, Valve LLC. All rights reserved.
@@ -122,4 +128,6 @@ inline Vector CrossProduct(const Vector& a, const Vector& b) { return Vector( a.
 #ifndef DID_VEC3_T_DEFINE
 #define DID_VEC3_T_DEFINE
 #define vec3_t Vector
+#endif
+
 #endif

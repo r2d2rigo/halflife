@@ -1,3 +1,9 @@
+#if !defined( HUD_H )
+#define HUD_H
+#if defined( _WIN32 )
+#pragma once
+#endif
+
 /***
 *
 *	Copyright (c) 1999, Valve LLC. All rights reserved.
@@ -656,3 +662,4 @@ extern int g_iUser1;
 extern int g_iUser2;
 extern int g_iUser3;
 
+#endif

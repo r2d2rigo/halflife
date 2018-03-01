@@ -14,6 +14,12 @@ CCustomEngineStudio
 
 ====================
 */
+struct cubemap_t
+{
+	Vector position;
+	uint texture;
+};
+
 class CCustomEngineStudio
 {
 private:
@@ -27,6 +33,8 @@ private:
 	mstudiobodyparts_t *m_pBodyPart;
 	mstudiomodel_t *m_pSubModel;
 	alight_t *m_pLighting;
+	cubemap_t *cubemaps;
+	int cubemapcount;
 
 	float (*m_pRotationMatrix)[3][4];
 	float (*m_pBoneTransforms)[MAXSTUDIOBONES][3][4];

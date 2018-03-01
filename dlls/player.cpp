@@ -149,6 +149,7 @@ TYPEDESCRIPTION	CBasePlayer::m_playerSaveData[] =
 
 
 int giPrecacheGrunt = 0;
+int giPrecacheAlienGrunt = 0;
 int gmsgShake = 0;
 int gmsgFade = 0;
 int gmsgSelAmmo = 0;
@@ -3531,6 +3532,20 @@ void CBasePlayer::CheatImpulseCommands( int iImpulse )
 			}
 			break;
 		}
+	case 77:
+	{
+		if (!giPrecacheAlienGrunt)
+		{
+			giPrecacheAlienGrunt = 1;
+			ALERT(at_console, "You must now restart to use Grunt-o-matic.\n");
+		}
+		else
+		{
+			UTIL_MakeVectors(Vector(0, pev->v_angle.y, 0));
+			Create("monster_alien_grunt", pev->origin + gpGlobals->v_forward * 128, pev->angles);
+		}
+		break;
+	}
 
 
 	case 101:
