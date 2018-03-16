@@ -1347,6 +1347,7 @@ static void ProcessCubemaps()
 {
 	int i;
 	entity_t *mapent;
+	dcubemap_t *cubemap;
 
 	g_numcubemaps = 0;
 
@@ -1356,11 +1357,14 @@ static void ProcessCubemaps()
 
 		if (!strcmp("env_cubemap", ValueForKey(mapent, "classname")))
 		{
-			g_dcubemaps[g_numcubemaps].origin[0] = (int)floor(mapent->origin[0]);
-			g_dcubemaps[g_numcubemaps].origin[1] = (int)floor(mapent->origin[1]);
-			g_dcubemaps[g_numcubemaps].origin[2] = (int)floor(mapent->origin[2]);
+			cubemap = &g_dcubemaps[g_numcubemaps];
 
-			g_dcubemaps[g_numcubemaps].size = IntForKey(mapent, "cubemapsize");
+			cubemap->origin[0] = (int)mapent->origin[0];
+			cubemap->origin[1] = (int)mapent->origin[1];
+			cubemap->origin[2] = (int)mapent->origin[2];
+
+			cubemap->size = IntForKey(mapent, "cubemapsize");
+			cubemap->offset = 0;
 
 			g_numcubemaps++;
 

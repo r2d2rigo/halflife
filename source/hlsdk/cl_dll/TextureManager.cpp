@@ -75,9 +75,9 @@ const GLuint& CTextureManager::LoadCubemap(const BspCubemap &cubemap)
 
 	for (int i = 0; i < 6; i++)
 	{
-		int faceOffset = i * (cubemap.Size * cubemap.Size * 3);
+		int faceOffset = i * (32 * 32 * 3);
 
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGBA, cubemap.Size, cubemap.Size, 0, GL_RGB, GL_UNSIGNED_BYTE, &(cubemap.Data[faceOffset]));
+		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGBA, 32, 32, 0, GL_RGB, GL_UNSIGNED_BYTE, &(cubemap.Data[faceOffset]));
 	}
 
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);

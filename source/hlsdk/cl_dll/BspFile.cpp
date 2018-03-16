@@ -20,20 +20,29 @@ void CBspFile::LoadBsp(const std::string &filename)
 		}
 
 		fileStream.seekg(Header.Lumps[15].Offset);
-		int cubemapCount;
-		fileStream.read((char*)&cubemapCount, sizeof(int));
 
-		for (int i = 0; i < cubemapCount; i++)
+		for (int i = 0; i < 8; i++)
 		{
 			BspCubemap cubemap;
 
 			fileStream.read((char*)&cubemap.Position, sizeof(int) * 3);
 			fileStream.read((char*)&cubemap.Size, sizeof(int));
+			fileStream.read((char*)&cubemap.Offset, sizeof(int));
 
-			int dataSize = 6 * (cubemap.Size *cubemap.Size) * 3;
+			int cubemapSize = 32;
+
+			if (cubemap.Size > 0)
+			{
+				cubemapSize = (int)pow(2, cubemap.Size - 1);
+			}
+
+			int dataSize = 6 * (cubemapSize * cubemapSize ) * 3;
 			cubemap.Data = new byte[dataSize];
 
+			int oldFileOffset = fileStream.tellg();
+			fileStream.seekg(Header.Lumps[15].Offset + cubemap.Offset);
 			fileStream.read((char*)cubemap.Data, dataSize);
+			fileStream.seekg(oldFileOffset);
 
 			Cubemaps.insert(Cubemaps.end(), cubemap);
 		}

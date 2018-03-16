@@ -278,6 +278,7 @@ typedef struct
 {
 	int             origin[3];
 	int             size;
+	int				offset;
 } dcubemap_t;
 
 //============================================================================

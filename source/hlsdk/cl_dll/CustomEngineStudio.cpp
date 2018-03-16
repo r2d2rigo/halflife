@@ -78,7 +78,7 @@ void CCustomEngineStudio::Init(struct engine_studio_api_s *pstudio)
 void CCustomEngineStudio::Reset()
 {
 	CBspFile bspFile;
-	bspFile.LoadBsp("test\\maps\\stalkyard_output.bsp");
+	bspFile.LoadBsp("test\\maps\\zoo_output.bsp");
 
 	cubemapcount = bspFile.Cubemaps.size();
 	cubemaps = new cubemap_t[cubemapcount];

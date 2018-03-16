@@ -24,6 +24,7 @@ struct BspCubemap
 {
 	int Position[3];
 	int Size;
+	int Offset;
 	byte *Data;
 };
 
