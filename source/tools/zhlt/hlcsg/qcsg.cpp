@@ -1341,6 +1341,35 @@ void            CSGCleanup()
 }
 
 // =====================================================================================
+//  ProcessCubemaps
+// =====================================================================================
+static void ProcessCubemaps()
+{
+	int i;
+	entity_t *mapent;
+
+	g_numcubemaps = 0;
+
+	for (i = 0; i < g_numentities; i++)
+	{
+		mapent = &g_entities[i];
+
+		if (!strcmp("env_cubemap", ValueForKey(mapent, "classname")))
+		{
+			g_dcubemaps[g_numcubemaps].origin[0] = (int)floor(mapent->origin[0]);
+			g_dcubemaps[g_numcubemaps].origin[1] = (int)floor(mapent->origin[1]);
+			g_dcubemaps[g_numcubemaps].origin[2] = (int)floor(mapent->origin[2]);
+
+			g_dcubemaps[g_numcubemaps].size = IntForKey(mapent, "cubemapsize");
+
+			g_numcubemaps++;
+
+			mapent->epairs = NULL;
+		}
+	}
+}
+
+// =====================================================================================
 //  Main
 //      Oh, come on.
 // =====================================================================================
@@ -1817,6 +1846,8 @@ int             main(const int argc, char** argv)
 
     if (g_chart)
         PrintBSPFileSizes();
+
+	ProcessCubemaps();
 
     WriteBSP(g_Mapname);
 

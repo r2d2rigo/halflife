@@ -109,7 +109,8 @@ lump_t;
 #define LUMP_EDGES        12
 #define LUMP_SURFEDGES    13
 #define LUMP_MODELS       14
-#define HEADER_LUMPS      15
+#define LUMP_CUBEMAPS     15
+#define HEADER_LUMPS      16
 
 //#define LUMP_MISCPAD      -1
 //#define LUMP_ZEROPAD      -2
@@ -269,6 +270,16 @@ typedef struct
 }
 dleaf_t;
 
+// Cubemaps
+
+#define MAX_MAP_CUBEMAPS 1024
+
+typedef struct
+{
+	int             origin[3];
+	int             size;
+} dcubemap_t;
+
 //============================================================================
 
 #define ANGLE_UP    -1
@@ -337,6 +348,10 @@ extern int      g_dmarksurfaces_checksum;
 extern int      g_numsurfedges;
 extern int      g_dsurfedges[MAX_MAP_SURFEDGES];
 extern int      g_dsurfedges_checksum;
+
+extern int      g_numcubemaps;
+extern dcubemap_t g_dcubemaps[MAX_MAP_CUBEMAPS];
+extern int      g_dcubemaps_checksum;
 
 extern void     DecompressVis(const byte* src, byte* const dest, const unsigned int dest_length);
 extern int      CompressVis(const byte* const src, const unsigned int src_length, byte* dest, unsigned int dest_length);
