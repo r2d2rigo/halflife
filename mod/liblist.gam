@@ -1,0 +1,11 @@
+game "test"
+trainmap "t0a0"
+version "1"
+size "101809713"
+svonly "0"
+cldll "1"
+mpentity "info_player_deathmatch"
+gamedll "dlls\hl.dll"
+secure "1"
+type "singleplayer_only"
+
