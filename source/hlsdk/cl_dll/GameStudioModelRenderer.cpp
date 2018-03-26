@@ -31,6 +31,7 @@
 #include "RendererCvars.h"
 #include "GlAPI.h"
 #include "TextureManager.h"
+#include "ShaderManager.h"
 
 //
 // Override the StudioModelRender virtual member functions here to implement custom bone
@@ -42,6 +43,7 @@ extern CCustomEngineStudio IEngineStudio;
 CRendererCvars RendererCvars;
 CGlAPI GlAPI;
 CTextureManager TextureManager;
+CShaderManager ShaderManager;
 
 // The renderer object, created on the stack.
 CGameStudioModelRenderer g_StudioRenderer;

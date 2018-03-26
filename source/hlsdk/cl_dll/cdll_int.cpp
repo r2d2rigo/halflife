@@ -47,9 +47,11 @@ extern "C"
 #include "../public/interface.h"
 
 #include "TextureManager.h"
+#include "ShaderManager.h"
 #include "CustomEngineStudio.h"
 
 extern CTextureManager TextureManager;
+extern CShaderManager ShaderManager;
 extern CCustomEngineStudio IEngineStudio;
 
 cl_enginefunc_t gEngfuncs;
@@ -184,6 +186,7 @@ int CL_DLLEXPORT HUD_VidInit( void )
 
 	VGui_Startup();
 
+	ShaderManager.Reset();
 	TextureManager.Reset();
 	IEngineStudio.Reset();
 

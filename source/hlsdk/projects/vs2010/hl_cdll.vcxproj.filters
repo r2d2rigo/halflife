@@ -55,6 +55,12 @@
     <Filter Include="Source Files\_hl\cl_dll\hl">
       <UniqueIdentifier>{bd9d5958-4e67-4bff-bbd8-6ba6dfcdb720}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\cl_dll\Shaders">
+      <UniqueIdentifier>{d03c50af-6e57-4742-8dc9-5eed0fd67bdb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\cl_dll\Shaders">
+      <UniqueIdentifier>{621fbebc-56dd-4c8d-ae73-92c1d8e88a0b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\dlls\crossbow.cpp">
@@ -321,6 +327,15 @@
     <ClCompile Include="..\..\cl_dll\BspFile.cpp">
       <Filter>Source Files\cl_dll</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\cl_dll\ShaderManager.cpp">
+      <Filter>Source Files\cl_dll</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\cl_dll\Shaders\Shader.cpp">
+      <Filter>Source Files\cl_dll\Shaders</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\cl_dll\Shaders\VertexLitGenericShader.cpp">
+      <Filter>Source Files\cl_dll\Shaders</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\cl_dll\kbutton.h">
@@ -457,6 +472,15 @@
     </ClInclude>
     <ClInclude Include="..\..\cl_dll\BspFile.h">
       <Filter>Header Files\cl_dll</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\cl_dll\ShaderManager.h">
+      <Filter>Header Files\cl_dll</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\cl_dll\Shaders\Shader.h">
+      <Filter>Header Files\cl_dll\Shaders</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\cl_dll\Shaders\VertexLitGenericShader.h">
+      <Filter>Header Files\cl_dll\Shaders</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

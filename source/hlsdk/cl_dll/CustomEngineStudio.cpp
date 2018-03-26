@@ -26,51 +26,22 @@
 #include "studio_util.h"
 #include "CustomEngineStudio.h"
 #include "TextureManager.h"
+#include "ShaderManager.h"
+#include "Shaders\VertexLitGenericShader.h"
 #include "BspFile.h"
 
 extern CTextureManager TextureManager;
+extern CShaderManager ShaderManager;
 
 CCustomEngineStudio::CCustomEngineStudio()
 {
 }
-
-GLuint shaderProgram;
 
 void CCustomEngineStudio::Init(struct engine_studio_api_s *pstudio)
 {
 	glewInit();
 
 	m_pCvarCustomRenderer = gEngfuncs.pfnRegisterVariable("r_customrenderer", "0", FCVAR_CLIENTDLL | FCVAR_ARCHIVE);
-
-	GLuint vertexShader, fragmentShader;
-
-	vertexShader = glCreateShaderObjectARB(GL_VERTEX_SHADER);
-	fragmentShader = glCreateShaderObjectARB(GL_FRAGMENT_SHADER);
-
-	int fileLength;
-	const char* fileContents = (const char*)gEngfuncs.COM_LoadFile("shaders/SimpleShader.vert", 5, &fileLength);
-	glShaderSourceARB(vertexShader, 1, &fileContents, &fileLength);
-	glCompileShaderARB(vertexShader);
-	gEngfuncs.COM_FreeFile((void*)fileContents);
-
-	fileContents = (const char*)gEngfuncs.COM_LoadFile("shaders/SimpleShader.frag", 5, &fileLength);
-	glShaderSourceARB(fragmentShader, 1, &fileContents, &fileLength);
-	glCompileShaderARB(fragmentShader);
-	gEngfuncs.COM_FreeFile((void*)fileContents);
-
-	shaderProgram = glCreateProgram();
-
-	glAttachShader(shaderProgram, vertexShader);
-	glAttachShader(shaderProgram, fragmentShader);
-
-	glLinkProgram(shaderProgram);
-
-	GLint maxLength = 0;
-	glGetShaderiv(vertexShader, GL_INFO_LOG_LENGTH, &maxLength);
-
-	// The maxLength includes the NULL character
-	char errorLog[2048];
-	glGetProgramInfoLog(shaderProgram, 2048, &maxLength, &errorLog[0]);
 
 	memcpy(&m_pEngineStudio, pstudio, sizeof(m_pEngineStudio));
 }
@@ -410,8 +381,6 @@ void CCustomEngineStudio::StudioDrawPointsFixedPipeline(void)
 
 void CCustomEngineStudio::StudioDrawPointsProgrammablePipeline(void)
 {
-	glUseProgram(shaderProgram);
-
 	mstudiotexture_t * pTextures = (mstudiotexture_t *)((byte *)m_pTextureHeader + m_pTextureHeader->textureindex);
 	short *pSkinReferences = (short *)((byte *)m_pTextureHeader + m_pTextureHeader->skinindex);
 
@@ -498,23 +467,38 @@ void CCustomEngineStudio::StudioDrawPointsProgrammablePipeline(void)
 		float s = 1.0 / (float)pMeshTexture->width;
 		float t = 1.0 / (float)pMeshTexture->height;
 
-		GLint textureLocation = glGetUniformLocation(shaderProgram, "texture");
-		GLint cubemapLocation = glGetUniformLocation(shaderProgram, "cubemap");
-		glUniform1i(textureLocation, 0); // Texture unit 0 is for base images.
-		glUniform1i(cubemapLocation, 1); // Texture unit 2 is for normal maps.
+		ShaderManager.VertexLitGeneric()->SetBaseTexture(pMeshTexture->index);
+		ShaderManager.VertexLitGeneric()->SetEnvMap(nearestCubemap->texture);
 
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, pMeshTexture->index);
-		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_CUBE_MAP, nearestCubemap->texture);
+		ShaderManager.VertexLitGeneric()->SetLightDir(m_pLighting->plightvec);
+		ShaderManager.VertexLitGeneric()->SetLightColor(m_pLighting->color, m_pLighting->shadelight / 255.0f);
 
-		GLint ambientLightLocation = glGetUniformLocation(shaderProgram, "AmbientLight");
-		GLint shadeLightLocation = glGetUniformLocation(shaderProgram, "ShadeLight");
-		GLint lightDirLocation = glGetUniformLocation(shaderProgram, "LightDir");
-		GLint lightColorLocation = glGetUniformLocation(shaderProgram, "LightColor");
-		GLint cubemapAmountLocation = glGetUniformLocation(shaderProgram, "CubemapAmount");
-		GLint cameraPosLocation = glGetUniformLocation(shaderProgram, "CameraPos");
-		GLint ambientCubeLocation = glGetUniformLocation(shaderProgram, "AmbientCube");
+		vec3_t origin, angles, forward, up, right;
+		m_pEngineStudio.GetViewInfo((float*)&origin, (float*)&forward, (float*)&right, (float*)&up);
+
+		ShaderManager.VertexLitGeneric()->SetCameraPos(origin);
+		
+		float cubeValues[6 * 3];
+
+		for (int i = 0; i < 6 * 3; i++)
+		{
+			cubeValues[i] = 0.1f;
+		}
+
+		ShaderManager.VertexLitGeneric()->SetAmbientCube(cubeValues);
+		
+		if (pMeshTexture->flags & STUDIO_NF_CHROME)
+		{
+			ShaderManager.VertexLitGeneric()->SetCubemapAmount(0.8f);
+		}
+		else
+		{
+			ShaderManager.VertexLitGeneric()->SetCubemapAmount(0.1f);
+		}
+
+		ShaderManager.VertexLitGeneric()->Apply();
+
+		// GLint ambientLightLocation = glGetUniformLocation(ShaderManager.VertexLitGeneric()->ShaderProgram(), "AmbientLight");
 
 		/*
 		* TODO: take into account flat shaded surfaces
@@ -524,33 +508,7 @@ void CCustomEngineStudio::StudioDrawPointsProgrammablePipeline(void)
 		}
 		*/
 
-		glUniform1f(ambientLightLocation, m_pLighting->ambientlight / 255.0f);
-		glUniform1f(shadeLightLocation, m_pLighting->shadelight / 255.0f);
-		glUniform3fv(lightDirLocation, 1, m_pLighting->plightvec);
-		glUniform3fv(lightColorLocation, 1, m_pLighting->color);
-
-		float cubeValues[6 * 3];
-
-		for (int i = 0; i < 6 * 3; i++)
-		{
-			cubeValues[i] = 0.1f;
-		}
-
-		glUniform3fv(ambientCubeLocation, 6, &cubeValues[0]);
-
-		vec3_t origin, angles, forward, up, right;
-		m_pEngineStudio.GetViewInfo((float*)&origin, (float*)&forward, (float*)&right, (float*)&up);
-		glUniform3fv(cameraPosLocation, 1, (float*)&origin);
-
-		if (pMeshTexture->flags & STUDIO_NF_CHROME)
-		{
-			// glUniform1f(cubemapAmountLocation, m_pLighting->ambientlight / 128.0f);
-			glUniform1f(cubemapAmountLocation, 0.8f);
-		}
-		else
-		{
-			glUniform1f(cubemapAmountLocation, 0.1f);
-		}
+		// glUniform1f(ambientLightLocation, m_pLighting->ambientlight / 255.0f);
 
 		while (int triangleCount = *(pMeshTriangles++))
 		{

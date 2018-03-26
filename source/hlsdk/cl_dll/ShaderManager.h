@@ -1,5 +1,5 @@
-#if !defined( TEXTUREMANAGER_H )
-#define TEXTUREMANAGER_H
+#if !defined( SHADERMANAGER_H )
+#define SHADERMANAGER_H
 #if defined( _WIN32 )
 #pragma once
 #endif
@@ -13,18 +13,20 @@
 #include <vector>
 #include <map>
 #include "SDL2/SDL_opengl.h"
-#include "BspFile.h"
 
-class CTextureManager
+#include "Shaders\Shader.h"
+#include "Shaders\VertexLitGenericShader.h"
+
+class CShaderManager
 {
 private:
-	std::map<std::string, GLuint> _textureHandles;
+	CVertexLitGenericShader _vertexLitGeneric;
 
 public:
-	CTextureManager(void);
+	CShaderManager(void);
 	void Reset(void);
 
-	const GLuint& LoadCubemap(const BspCubemap &cubemap);
+	CVertexLitGenericShader* VertexLitGeneric();
 };
 
 #endif

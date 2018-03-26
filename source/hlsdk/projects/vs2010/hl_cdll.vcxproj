@@ -147,6 +147,9 @@ call ..\..\filecopy.bat $(TargetDir)\$(TargetName).pdb ..\..\..\game\mod\cl_dlls
     <ClCompile Include="..\..\cl_dll\message.cpp" />
     <ClCompile Include="..\..\cl_dll\RendererCvars.cpp" />
     <ClCompile Include="..\..\cl_dll\saytext.cpp" />
+    <ClCompile Include="..\..\cl_dll\ShaderManager.cpp" />
+    <ClCompile Include="..\..\cl_dll\Shaders\Shader.cpp" />
+    <ClCompile Include="..\..\cl_dll\Shaders\VertexLitGenericShader.cpp" />
     <ClCompile Include="..\..\cl_dll\statusbar.cpp" />
     <ClCompile Include="..\..\cl_dll\status_icons.cpp" />
     <ClCompile Include="..\..\cl_dll\StudioModelRenderer.cpp" />
@@ -220,6 +223,9 @@ call ..\..\filecopy.bat $(TargetDir)\$(TargetName).pdb ..\..\..\game\mod\cl_dlls
     <ClInclude Include="..\..\cl_dll\in_defs.h" />
     <ClInclude Include="..\..\cl_dll\kbutton.h" />
     <ClInclude Include="..\..\cl_dll\RendererCvars.h" />
+    <ClInclude Include="..\..\cl_dll\ShaderManager.h" />
+    <ClInclude Include="..\..\cl_dll\Shaders\Shader.h" />
+    <ClInclude Include="..\..\cl_dll\Shaders\VertexLitGenericShader.h" />
     <ClInclude Include="..\..\cl_dll\StudioModelRenderer.h" />
     <ClInclude Include="..\..\cl_dll\TextureManager.h" />
     <ClInclude Include="..\..\cl_dll\tri.h" />
