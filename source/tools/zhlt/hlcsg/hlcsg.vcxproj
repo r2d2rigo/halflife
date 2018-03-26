@@ -212,6 +212,9 @@
       <StackReserveSize>16777216</StackReserveSize>
       <StackCommitSize>1048576</StackCommitSize>
     </Link>
+    <PostBuildEvent>
+      <Command>copy "$(TargetPath)" "$(SolutionDir)..\..\..\map tools"</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <Midl>

@@ -160,7 +160,7 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>copy "$(TargetDir)*.exe" "D:\Steam\steamapps\common\Half-Life SDK\Map Tools\BuildCubemaps"
-copy "$(TargetDir)*.dll" "D:\Steam\steamapps\common\Half-Life SDK\Map Tools\BuildCubemaps"</PostBuildEvent>
+    <PostBuildEvent>copy "$(TargetDir)*.exe" "$(SolutionDir)..\..\..\map tools"
+copy "$(TargetDir)*.dll" "$(SolutionDir)..\..\..\map tools"</PostBuildEvent>
   </PropertyGroup>
 </Project>

@@ -81,7 +81,7 @@ namespace BuildCubemaps
 
                     var textureIndex = GL.GenTexture();
                     GL.BindTexture(TextureTarget.Texture2D, textureIndex);
-                    // GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, (int)texture.Width, (int)texture.Height, 0, PixelFormat.Rgba, PixelType.UnsignedByte, textureData);
+                    GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, (int)texture.Width, (int)texture.Height, 0, PixelFormat.Rgba, PixelType.UnsignedByte, textureData);
                     GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Linear);
                     GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMagFilter.Linear);
 
