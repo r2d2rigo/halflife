@@ -1348,8 +1348,10 @@ static void ProcessCubemaps()
 	int i;
 	entity_t *mapent;
 	dcubemap_t *cubemap;
-
-	g_numcubemaps = 0;
+	
+	dcubemaplump_t cubemaplumphdr;
+	cubemaplumphdr.numcubemaps = 0;
+	dcubemap_t cubemaps[MAX_MAP_CUBEMAPS];
 
 	for (i = 0; i < g_numentities; i++)
 	{
@@ -1357,7 +1359,7 @@ static void ProcessCubemaps()
 
 		if (!strcmp("env_cubemap", ValueForKey(mapent, "classname")))
 		{
-			cubemap = &g_dcubemaps[g_numcubemaps];
+			cubemap = &cubemaps[cubemaplumphdr.numcubemaps];
 
 			cubemap->origin[0] = (int)mapent->origin[0];
 			cubemap->origin[1] = (int)mapent->origin[1];
@@ -1366,11 +1368,15 @@ static void ProcessCubemaps()
 			cubemap->size = IntForKey(mapent, "cubemapsize");
 			cubemap->offset = 0;
 
-			g_numcubemaps++;
+			cubemaplumphdr.numcubemaps++;
 
 			mapent->epairs = NULL;
 		}
 	}
+
+	g_cubemapdatasize = sizeof(dcubemaplump_t) + (sizeof(dcubemap_t) * cubemaplumphdr.numcubemaps);
+	memcpy(g_dcubemapdata, &cubemaplumphdr, sizeof(dcubemaplump_t));
+	memcpy(g_dcubemapdata + sizeof(dcubemaplump_t), &cubemaps[0], (sizeof(dcubemap_t) * cubemaplumphdr.numcubemaps));
 }
 
 // =====================================================================================

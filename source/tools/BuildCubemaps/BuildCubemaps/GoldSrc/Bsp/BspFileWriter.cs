@@ -366,7 +366,13 @@ namespace GoldSrc.Bsp
             {
                 using (var writer = new BinaryWriter(stream))
                 {
-                    var dataOffset = ((sizeof(int) * 3) + sizeof(int) + sizeof(int)) * bspFile.Cubemaps.Length;
+                    var dataOffset = sizeof(int) +                  // Cubemap count
+                                        ((sizeof(int) * 3) +        // Cubemap sample position
+                                        sizeof(int) +               // Cubemap sample size
+                                        sizeof(int)) *              // Cubemap sample data offset
+                                    bspFile.Cubemaps.Length;
+
+                    writer.Write(bspFile.Cubemaps.Length);
 
                     foreach (var cubemap in bspFile.Cubemaps)
                     {

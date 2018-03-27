@@ -360,7 +360,9 @@ namespace GoldSrc.Bsp
 
             using (var reader = new BinaryReader(new MemoryStream(lumpData.Data)))
             {
-                while (reader.BaseStream.Position < reader.BaseStream.Length)
+                var cubemapCount = reader.ReadInt32();
+
+                for (int i = 0; i < cubemapCount; i++)
                 {
                     var newCubemap = new BspCubemap();
                     newCubemap.Position = new int[3];

@@ -65,6 +65,9 @@
 #define MAX_MAP_VISIBILITY  0x200000
 // arbitrary
 
+#define DEFAULT_MAX_MAP_CUBEMAPDATA 0x600000
+// arbitrary
+
 // these are for entity key:value pairs
 #define MAX_KEY                 32
 #define ZHLT3_MAX_VALUE             4096
@@ -276,6 +279,11 @@ dleaf_t;
 
 typedef struct
 {
+	int             numcubemaps;
+} dcubemaplump_t;
+
+typedef struct
+{
 	int             origin[3];
 	int             size;
 	int				offset;
@@ -350,9 +358,9 @@ extern int      g_numsurfedges;
 extern int      g_dsurfedges[MAX_MAP_SURFEDGES];
 extern int      g_dsurfedges_checksum;
 
-extern int      g_numcubemaps;
-extern dcubemap_t g_dcubemaps[MAX_MAP_CUBEMAPS];
-extern int      g_dcubemaps_checksum;
+extern int      g_cubemapdatasize;
+extern byte*    g_dcubemapdata;
+extern int      g_dcubemapdata_checksum;
 
 extern void     DecompressVis(const byte* src, byte* const dest, const unsigned int dest_length);
 extern int      CompressVis(const byte* const src, const unsigned int src_length, byte* dest, unsigned int dest_length);
@@ -405,6 +413,7 @@ extern entity_t* EntityForModel(int modnum);
 
 extern int      g_max_map_miptex;
 extern int		g_max_map_lightdata;
+extern int		g_max_map_cubemapdata; 
 extern void     dtexdata_init();
 extern void CDECL dtexdata_free();
 

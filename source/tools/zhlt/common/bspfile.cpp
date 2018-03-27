@@ -12,6 +12,7 @@
 
 int             g_max_map_miptex = DEFAULT_MAX_MAP_MIPTEX;
 int				g_max_map_lightdata = DEFAULT_MAX_MAP_LIGHTDATA;
+int				g_max_map_cubemapdata = DEFAULT_MAX_MAP_CUBEMAPDATA;
 
 int             g_nummodels;
 dmodel_t        g_dmodels[MAX_MAP_MODELS];
@@ -76,9 +77,9 @@ int             g_dsurfedges_checksum;
 int             g_numentities;
 entity_t        g_entities[MAX_MAP_ENTITIES];
 
-int             g_numcubemaps;
-dcubemap_t      g_dcubemaps[MAX_MAP_CUBEMAPS];
-int             g_dcubemaps_checksum;
+int             g_cubemapdatasize;
+byte*           g_dcubemapdata;
+int             g_dcubemapdata_checksum;
 
 /*
  * ===============
@@ -374,14 +375,23 @@ static void     SwapBSPFile(const bool todisk)
 	//
 	// cubemaps
 	//
-	for (i = 0; i < g_numcubemaps; i++)
-	{
-		g_dcubemaps[i].origin[0] = LittleLong(g_dcubemaps[i].origin[0]);
-		g_dcubemaps[i].origin[1] = LittleLong(g_dcubemaps[i].origin[1]);
-		g_dcubemaps[i].origin[2] = LittleLong(g_dcubemaps[i].origin[2]);
+	dcubemaplump_t* cubemaphdr = (dcubemaplump_t*)g_dcubemapdata;
+	byte* cubemapdata = g_dcubemapdata + sizeof(dcubemaplump_t);
 
-		g_dcubemaps[i].size = LittleLong(g_dcubemaps[i].size);
+	for (i = 0; i < cubemaphdr->numcubemaps; i++)
+	{
+		dcubemap_t* cubemap = (dcubemap_t*)cubemapdata;
+
+		cubemap->origin[0] = LittleLong(cubemap->origin[0]);
+		cubemap->origin[1] = LittleLong(cubemap->origin[1]);
+		cubemap->origin[2] = LittleLong(cubemap->origin[2]);
+
+		cubemap->size = LittleLong(cubemap->size);
+
+		cubemapdata += sizeof(dcubemap_t);
 	}
+
+	cubemaphdr->numcubemaps = LittleLong(cubemaphdr->numcubemaps);
 }
 
 // =====================================================================================
@@ -405,6 +415,10 @@ static int      CopyLump(int lump, void* dest, int size, const dheader_t* const 
 	{ hlassume(g_max_map_miptex > length,assume_MAX_MAP_MIPTEX); }
 	else if(lump == LUMP_LIGHTING && dest == (void*)g_dlightdata)
 	{ hlassume(g_max_map_lightdata > length,assume_MAX_MAP_LIGHTING); }
+	else if (lump == LUMP_CUBEMAPS && dest == (void*)g_dcubemapdata)
+	{
+		hlassume(g_max_map_cubemapdata > length, assume_MAX_MAP_LIGHTING);
+	}
 
     memcpy(dest, (byte*) header + ofs, length);
 
@@ -458,7 +472,7 @@ void            LoadBSPImage(dheader_t* const header)
     g_lightdatasize = CopyLump(LUMP_LIGHTING, g_dlightdata, 1, header);
     g_entdatasize = CopyLump(LUMP_ENTITIES, g_dentdata, 1, header);
 
-	g_numcubemaps = CopyLump(LUMP_CUBEMAPS, g_dcubemaps, sizeof(dcubemap_t), header);
+	g_cubemapdatasize = CopyLump(LUMP_CUBEMAPS, g_dcubemapdata, 1, header);
 
     Free(header);                                          // everything has been copied out
 
@@ -483,7 +497,7 @@ void            LoadBSPImage(dheader_t* const header)
     g_dlightdata_checksum = FastChecksum(g_dlightdata, g_lightdatasize * sizeof(g_dlightdata[0]));
     g_dentdata_checksum = FastChecksum(g_dentdata, g_entdatasize * sizeof(g_dentdata[0]));
 
-	g_dcubemaps_checksum = FastChecksum(g_dcubemaps, g_numcubemaps * sizeof(g_dcubemaps[0]));
+	g_dcubemapdata_checksum = FastChecksum(g_dcubemapdata, g_cubemapdatasize * sizeof(g_dcubemapdata[0]));
 }
 
 //
@@ -541,7 +555,7 @@ void            WriteBSPFile(const char* const filename)
     AddLump(LUMP_ENTITIES,  g_dentdata,     g_entdatasize,                      header, bspfile);
     AddLump(LUMP_TEXTURES,  g_dtexdata,     g_texdatasize,                      header, bspfile);
 
-	AddLump(LUMP_CUBEMAPS,  g_dcubemaps,    g_numcubemaps * sizeof(dcubemap_t), header, bspfile);
+	AddLump(LUMP_CUBEMAPS,  g_dcubemapdata, g_cubemapdatasize,					header, bspfile);
 	
 	fseek(bspfile, 0, SEEK_SET);
     SafeWrite(bspfile, header, sizeof(dheader_t));
@@ -607,7 +621,7 @@ void            PrintBSPFileSizes()
     totalmemory += ArrayUsage("surfedges", g_numsurfedges, ENTRIES(g_dsurfedges), ENTRYSIZE(g_dsurfedges));
     totalmemory += ArrayUsage("edges", g_numedges, ENTRIES(g_dedges), ENTRYSIZE(g_dedges));
 
-	totalmemory += ArrayUsage("cubemaps", g_numcubemaps, ENTRIES(g_dcubemaps), ENTRYSIZE(g_dcubemaps));
+	totalmemory += GlobUsage("cubemaps", g_cubemapdatasize, g_max_map_cubemapdata);
 
     totalmemory += GlobUsage("texdata", g_texdatasize, g_max_map_miptex);
     totalmemory += GlobUsage("lightdata", g_lightdatasize, g_max_map_lightdata);
@@ -866,6 +880,9 @@ void            dtexdata_init()
     hlassume(g_dtexdata != NULL, assume_NoMemory);
 	g_dlightdata = (byte*)AllocBlock(g_max_map_lightdata);
 	hlassume(g_dlightdata != NULL, assume_NoMemory);
+
+	g_dcubemapdata = (byte*)AllocBlock(g_max_map_cubemapdata);
+	hlassume(g_dcubemapdata != NULL, assume_NoMemory);
 }
 
 void CDECL      dtexdata_free()
@@ -874,6 +891,9 @@ void CDECL      dtexdata_free()
     g_dtexdata = NULL;
 	FreeBlock(g_dlightdata);
 	g_dlightdata = NULL;
+
+	FreeBlock(g_dcubemapdata);
+	g_dcubemapdata = NULL;
 }
 
 // =====================================================================================

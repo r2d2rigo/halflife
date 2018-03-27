@@ -1,6 +1,6 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2013
-VisualStudioVersion = 12.0.40629.0
+# Visual Studio 15
+VisualStudioVersion = 15.0.27130.2020
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "hlbsp", "hlbsp\hlbsp.vcxproj", "{367AE0F7-CD4D-44E0-A2E2-34B9C6A3E51A}"
 EndProject
@@ -53,7 +53,6 @@ Global
 		{F5FAF7EF-2471-4B5D-B0E4-DE254EC439FC}.Release|x64.ActiveCfg = Release|x64
 		{F5FAF7EF-2471-4B5D-B0E4-DE254EC439FC}.Release|x64.Build.0 = Release|x64
 		{B822EA81-4DA2-4FBA-9DA4-DB80067D8480}.Debug|Win32.ActiveCfg = Debug|Win32
-		{B822EA81-4DA2-4FBA-9DA4-DB80067D8480}.Debug|Win32.Build.0 = Debug|Win32
 		{B822EA81-4DA2-4FBA-9DA4-DB80067D8480}.Debug|x64.ActiveCfg = Debug|x64
 		{B822EA81-4DA2-4FBA-9DA4-DB80067D8480}.Debug|x64.Build.0 = Debug|x64
 		{B822EA81-4DA2-4FBA-9DA4-DB80067D8480}.Release|Win32.ActiveCfg = Release|Win32
@@ -63,5 +62,8 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {ED50DF0B-49B0-445D-9584-580C9D7154BE}
 	EndGlobalSection
 EndGlobal
