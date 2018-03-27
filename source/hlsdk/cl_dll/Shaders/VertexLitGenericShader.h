@@ -27,6 +27,8 @@ private:
 	Vector _cameraPos;
 	float _ambientCube[6];
 
+	float _envMapContrast;
+
 public:
 	CVertexLitGenericShader(void);
 
@@ -41,6 +43,8 @@ public:
 	void SetCubemapAmount(const float &cubemapAmount);
 	void SetCameraPos(const Vector &cameraPos);
 	void SetAmbientCube(float ambientCube[6]);
+
+	void SetEnvMapContrast(const float &envMapContrast);
 
 	// GLint shadeLightLocation = glGetUniformLocation(ShaderManager.VertexLitGeneric()->ShaderProgram(), "ShadeLight");
 	// GLint lightDirLocation = glGetUniformLocation(ShaderManager.VertexLitGeneric()->ShaderProgram(), "LightDir");

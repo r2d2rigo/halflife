@@ -496,6 +496,8 @@ void CCustomEngineStudio::StudioDrawPointsProgrammablePipeline(void)
 			ShaderManager.VertexLitGeneric()->SetCubemapAmount(0.1f);
 		}
 
+		ShaderManager.VertexLitGeneric()->SetEnvMapContrast(1.0f);
+
 		ShaderManager.VertexLitGeneric()->Apply();
 
 		// GLint ambientLightLocation = glGetUniformLocation(ShaderManager.VertexLitGeneric()->ShaderProgram(), "AmbientLight");
@@ -528,8 +530,8 @@ void CCustomEngineStudio::StudioDrawPointsProgrammablePipeline(void)
 
 				if (pMeshTexture->flags & STUDIO_NF_CHROME)
 				{
-					// glTexCoord2f(m_iChromeTexCoords[pMeshTriangles[1]][0] * s, m_iChromeTexCoords[pMeshTriangles[1]][1] * t);
-					glTexCoord2f(pMeshTriangles[2] * s, pMeshTriangles[3] * t);
+					glTexCoord2f(m_iChromeTexCoords[pMeshTriangles[1]][0] * s, m_iChromeTexCoords[pMeshTriangles[1]][1] * t);
+					// glTexCoord2f(pMeshTriangles[2] * s, pMeshTriangles[3] * t);
 				}
 				else
 				{
