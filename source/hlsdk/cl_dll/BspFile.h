@@ -17,7 +17,7 @@ struct BspLump
 struct BspHeader
 {
 	int Version;
-	BspLump Lumps[16];
+	BspLump Lumps[17];
 };
 
 struct BspCubemap
@@ -28,11 +28,18 @@ struct BspCubemap
 	byte *Data;
 };
 
+struct BspLeafAmbientLight
+{
+	int Position[3];
+	byte AmbientColor[6][3];
+};
+
 class CBspFile
 {
 public:
 	BspHeader Header;
 	std::vector<BspCubemap> Cubemaps;
+	std::vector<BspLeafAmbientLight> AmbientLights;
 
 public:
 	CBspFile(void);

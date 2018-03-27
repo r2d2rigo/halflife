@@ -33,6 +33,8 @@
 extern CTextureManager TextureManager;
 extern CShaderManager ShaderManager;
 
+CBspFile bspFile;
+
 CCustomEngineStudio::CCustomEngineStudio()
 {
 }
@@ -48,8 +50,7 @@ void CCustomEngineStudio::Init(struct engine_studio_api_s *pstudio)
 
 void CCustomEngineStudio::Reset()
 {
-	CBspFile bspFile;
-	bspFile.LoadBsp("test\\maps\\zoo_output.bsp");
+	bspFile.LoadBsp("test\\maps\\zoo_output2.bsp");
 
 	cubemapcount = bspFile.Cubemaps.size();
 	cubemaps = new cubemap_t[cubemapcount];
@@ -418,6 +419,17 @@ void CCustomEngineStudio::StudioDrawPointsProgrammablePipeline(void)
 		}
 	}
 
+	float ambientDistance = 99999;
+	BspLeafAmbientLight *nearestAmbient = &bspFile.AmbientLights[0];
+	for (int i = 0; i < bspFile.AmbientLights.size(); i++)
+	{
+		if ((m_pCurrentEntity->origin - Vector(bspFile.AmbientLights[i].Position[0], bspFile.AmbientLights[i].Position[1], bspFile.AmbientLights[i].Position[2])).Length() < cubemapDistance)
+		{
+			nearestAmbient = &bspFile.AmbientLights[i];
+			ambientDistance = (m_pCurrentEntity->origin - Vector(bspFile.AmbientLights[i].Position[0], bspFile.AmbientLights[i].Position[1], bspFile.AmbientLights[i].Position[2])).Length();
+		}
+	}
+
 	for (int i = 0; i < m_pSubModel->nummesh; i++)
 	{
 		mstudiomesh_t *pSubModelMesh = (mstudiomesh_t *)((byte *)m_pStudioHeader + m_pSubModel->meshindex) + i;
@@ -480,9 +492,12 @@ void CCustomEngineStudio::StudioDrawPointsProgrammablePipeline(void)
 		
 		float cubeValues[6 * 3];
 
-		for (int i = 0; i < 6 * 3; i++)
+		for (int i = 0; i < 6; i++)
 		{
-			cubeValues[i] = 0.1f;
+			cubeValues[i * 3] = nearestAmbient->AmbientColor[i][0] / 255.0f;
+			cubeValues[i * 3 + 1] = nearestAmbient->AmbientColor[i][1] / 255.0f;
+			cubeValues[i * 3 + 2] = nearestAmbient->AmbientColor[i][2] / 255.0f;
+			// cubeValues[i] = 0.1f;
 		}
 
 		ShaderManager.VertexLitGeneric()->SetAmbientCube(cubeValues);

@@ -12,5 +12,8 @@ namespace BuildCubemaps
 
         [Option(Required = true)]
         public string WadDirectory { get; set; }
+
+        [Option(Required = false, Default = false)]
+        public bool AmbientLighting { get; set; }
     }
 }

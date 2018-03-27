@@ -14,7 +14,7 @@ void CBspFile::LoadBsp(const std::string &filename)
 	{
 		fileStream.read((char*)&Header.Version, sizeof(int));
 
-		for (int i = 0; i < 16; i++)
+		for (int i = 0; i < 17; i++)
 		{
 			fileStream.read((char*)&Header.Lumps[i], sizeof(BspLump));
 		}
@@ -49,6 +49,20 @@ void CBspFile::LoadBsp(const std::string &filename)
 			fileStream.seekg(oldFileOffset);
 
 			Cubemaps.insert(Cubemaps.end(), cubemap);
+		}
+
+		fileStream.seekg(Header.Lumps[16].Offset);
+
+		for (int i = 0; i < 44; i++)
+		{ 
+			BspLeafAmbientLight ambientLight;
+			int padding;
+
+			fileStream.read((char*)&ambientLight.Position, sizeof(int) * 3);
+			fileStream.read((char*)&ambientLight.AmbientColor, sizeof(byte) * 6 * 3);
+			fileStream.read((char*)&padding, sizeof(byte) * 2);
+
+			AmbientLights.insert(AmbientLights.end(), ambientLight);
 		}
 
 		fileStream.close();

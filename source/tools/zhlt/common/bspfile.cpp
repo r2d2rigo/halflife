@@ -81,6 +81,10 @@ int             g_cubemapdatasize;
 byte*           g_dcubemapdata;
 int             g_dcubemapdata_checksum;
 
+int				g_numleafambientlights;
+dleafambientlighting_t    g_dleafambientlights[MAX_MAP_AMBIENT_LIGHTING_SAMPLES];
+int				g_dleafambientlights_checksum;
+
 /*
  * ===============
  * FastChecksum
@@ -392,6 +396,17 @@ static void     SwapBSPFile(const bool todisk)
 	}
 
 	cubemaphdr->numcubemaps = LittleLong(cubemaphdr->numcubemaps);
+
+	//
+	// ambient lighting
+	//
+
+	for (i = 0; i < g_numleafambientlights; i++)
+	{
+		g_dleafambientlights[i].origin[0] = LittleLong(g_dleafambientlights[i].origin[0]);
+		g_dleafambientlights[i].origin[1] = LittleLong(g_dleafambientlights[i].origin[1]);
+		g_dleafambientlights[i].origin[2] = LittleLong(g_dleafambientlights[i].origin[2]);
+	}
 }
 
 // =====================================================================================
@@ -473,6 +488,7 @@ void            LoadBSPImage(dheader_t* const header)
     g_entdatasize = CopyLump(LUMP_ENTITIES, g_dentdata, 1, header);
 
 	g_cubemapdatasize = CopyLump(LUMP_CUBEMAPS, g_dcubemapdata, 1, header);
+	g_numleafambientlights = CopyLump(LUMP_AMBIENT_LIGHTING, g_dleafambientlights, sizeof(dleafambientlighting_t), header);
 
     Free(header);                                          // everything has been copied out
 
@@ -498,6 +514,7 @@ void            LoadBSPImage(dheader_t* const header)
     g_dentdata_checksum = FastChecksum(g_dentdata, g_entdatasize * sizeof(g_dentdata[0]));
 
 	g_dcubemapdata_checksum = FastChecksum(g_dcubemapdata, g_cubemapdatasize * sizeof(g_dcubemapdata[0]));
+	g_dleafambientlights_checksum = FastChecksum(g_dleafambientlights, g_numleafambientlights * sizeof(g_dleafambientlights[0]));
 }
 
 //
@@ -556,6 +573,7 @@ void            WriteBSPFile(const char* const filename)
     AddLump(LUMP_TEXTURES,  g_dtexdata,     g_texdatasize,                      header, bspfile);
 
 	AddLump(LUMP_CUBEMAPS,  g_dcubemapdata, g_cubemapdatasize,					header, bspfile);
+	AddLump(LUMP_AMBIENT_LIGHTING, g_dleafambientlights, g_numleafambientlights * sizeof(dleafambientlighting_t), header, bspfile);
 	
 	fseek(bspfile, 0, SEEK_SET);
     SafeWrite(bspfile, header, sizeof(dheader_t));
@@ -622,6 +640,7 @@ void            PrintBSPFileSizes()
     totalmemory += ArrayUsage("edges", g_numedges, ENTRIES(g_dedges), ENTRYSIZE(g_dedges));
 
 	totalmemory += GlobUsage("cubemaps", g_cubemapdatasize, g_max_map_cubemapdata);
+	totalmemory += ArrayUsage("leafambientlighting", g_numleafambientlights, ENTRIES(g_dleafambientlights), ENTRYSIZE(g_dleafambientlights));
 
     totalmemory += GlobUsage("texdata", g_texdatasize, g_max_map_miptex);
     totalmemory += GlobUsage("lightdata", g_lightdatasize, g_max_map_lightdata);

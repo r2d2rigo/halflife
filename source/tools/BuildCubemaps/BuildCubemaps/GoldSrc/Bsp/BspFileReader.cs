@@ -35,6 +35,7 @@ namespace GoldSrc.Bsp
                 lumpParseActions.Add(LumpTypes.SurfEdges, (l, f) => ReadSurfEdgesLump(l, f));
                 lumpParseActions.Add(LumpTypes.Models, (l, f) => ReadModelsData(l, f));
                 lumpParseActions.Add(LumpTypes.Cubemaps, (l, f) => ReadCubemapsLump(l, f));
+                lumpParseActions.Add(LumpTypes.LeafAmbientLighting, (l, f) => ReadLeafAmbientLightingLump(l, f));
 
                 var bspFile = new BspFile();
                 var bspHeader = ReadHeader(reader);
@@ -374,8 +375,13 @@ namespace GoldSrc.Bsp
 
                     if (newCubemap.Offset > 0)
                     {
-                        throw new NotImplementedException("Not implemented yet");
-                        // newCubemap.Data = reader.ReadBytes(6 * (newCubemap.Size * newCubemap.Size) * 3);
+                        var sizeInPixels = (int)Math.Pow(2, newCubemap.Size - 1);
+                        var dataSize = (sizeInPixels * sizeInPixels) * 3 * 6;
+
+                        var oldOffset = reader.BaseStream.Position;
+                        reader.BaseStream.Seek(newCubemap.Offset, SeekOrigin.Begin);
+                        newCubemap.Data = reader.ReadBytes(dataSize);
+                        reader.BaseStream.Seek(oldOffset, SeekOrigin.Begin);
                     }
 
                     lumpCubemaps.Add(newCubemap);
@@ -383,6 +389,30 @@ namespace GoldSrc.Bsp
             }
 
             bspFile.Cubemaps = lumpCubemaps.ToArray();
+        }
+
+        private void ReadLeafAmbientLightingLump(BspLump lumpData, BspFile bspFile)
+        {
+            List<BspLeafAmbientLighting> lumpLeafAmbientLighting = new List<BspLeafAmbientLighting>();
+
+            using (var reader = new BinaryReader(new MemoryStream(lumpData.Data)))
+            {
+                while (reader.BaseStream.Position < reader.BaseStream.Length)
+                {
+                    var newAmbientLight = new BspLeafAmbientLighting();
+                    newAmbientLight.Position = new Int32[3];
+                    newAmbientLight.Position[0] = reader.ReadInt32();
+                    newAmbientLight.Position[2] = reader.ReadInt32();
+                    newAmbientLight.Position[1] = reader.ReadInt32();
+                    newAmbientLight.AmbientColor = reader.ReadBytes(6 * 3);
+                    reader.ReadBytes(2); // TODO: what is this weird padding?
+                    // newAmbientLight.AmbientColor = reader.ReadBytes(20);
+
+                    lumpLeafAmbientLighting.Add(newAmbientLight);
+                }
+            }
+
+            bspFile.LeafAmbientLights = lumpLeafAmbientLighting.ToArray();
         }
     }
 }

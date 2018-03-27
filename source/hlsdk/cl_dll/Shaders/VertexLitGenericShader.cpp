@@ -71,14 +71,12 @@ void CVertexLitGenericShader::SetCameraPos(const Vector &cameraPos)
 	_cameraPos = cameraPos;
 }
 
-void CVertexLitGenericShader::SetAmbientCube(float ambientCube[6])
+void CVertexLitGenericShader::SetAmbientCube(float ambientCube[18])
 {
-	_ambientCube[0] = ambientCube[0];
-	_ambientCube[1] = ambientCube[1];
-	_ambientCube[2] = ambientCube[2];
-	_ambientCube[3] = ambientCube[3];
-	_ambientCube[4] = ambientCube[4];
-	_ambientCube[5] = ambientCube[5];
+	for (int i = 0; i < 18; i++)
+	{
+		_ambientCube[i] = ambientCube[i];
+	}
 }
 
 void CVertexLitGenericShader::SetEnvMapContrast(const float &envMapContrast)
@@ -98,7 +96,7 @@ void CVertexLitGenericShader::Apply()
 
 	SetParameter("CameraPos", 3, 1, (float*)_cameraPos);
 	SetParameter("CubemapAmount", _cubemapAmount);
-	SetParameter("AmbientCube", 6, 1, _ambientCube);
+	SetParameter("AmbientCube", 3, 6, _ambientCube);
 	SetParameter("EnvMapContrast", _envMapContrast);
 
 	glActiveTexture(GL_TEXTURE0);

@@ -46,6 +46,7 @@ namespace GoldSrc.Bsp
                 bspHeader.Lumps[(int)LumpTypes.Entities] = WriteLump(WriteEntitiesLump(bsp), writer);
                 bspHeader.Lumps[(int)LumpTypes.Textures] = WriteLump(WriteTexturesLump(bsp), writer);
                 bspHeader.Lumps[(int)LumpTypes.Cubemaps] = WriteLump(WriteCubemapsLump(bsp), writer);
+                bspHeader.Lumps[(int)LumpTypes.LeafAmbientLighting] = WriteLump(WriteLeafAmbientLightingLump(bsp), writer);
 
                 writer.BaseStream.Seek(0, SeekOrigin.Begin);
 
@@ -399,6 +400,28 @@ namespace GoldSrc.Bsp
                         {
                             writer.Write(cubemap.Data);
                         }
+                    }
+
+                    return stream.ToArray();
+                }
+            }
+        }
+
+        private byte[] WriteLeafAmbientLightingLump(BspFile bspFile)
+        {
+            using (var stream = new MemoryStream())
+            {
+                using (var writer = new BinaryWriter(stream))
+                {
+                    foreach (var leafAmbientLight in bspFile.LeafAmbientLights)
+                    {
+                        writer.Write(leafAmbientLight.Position[0]);
+                        writer.Write(leafAmbientLight.Position[2]);
+                        writer.Write(leafAmbientLight.Position[1]);
+                        writer.Write(leafAmbientLight.AmbientColor);
+
+                        writer.Write((byte)0x00);
+                        writer.Write((byte)0x00);
                     }
 
                     return stream.ToArray();

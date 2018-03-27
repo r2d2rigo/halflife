@@ -25,7 +25,7 @@ private:
 
 	float _cubemapAmount;
 	Vector _cameraPos;
-	float _ambientCube[6];
+	float _ambientCube[18];
 
 	float _envMapContrast;
 
@@ -42,7 +42,7 @@ public:
 	void SetLightColor(const Vector &lightColor, const float &lightIntensity);
 	void SetCubemapAmount(const float &cubemapAmount);
 	void SetCameraPos(const Vector &cameraPos);
-	void SetAmbientCube(float ambientCube[6]);
+	void SetAmbientCube(float ambientCube[18]);
 
 	void SetEnvMapContrast(const float &envMapContrast);
 

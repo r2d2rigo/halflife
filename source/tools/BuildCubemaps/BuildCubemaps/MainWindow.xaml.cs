@@ -93,26 +93,50 @@ namespace BuildCubemaps
                 _isInitialized = true;
             }
 
-            foreach (var cubemap in _bsp.Cubemaps)
+            if (App.Arguments.AmbientLighting)
             {
-                var cubemapOrigin = new Vector3(cubemap.Position[0], cubemap.Position[1], cubemap.Position[2]);
-                var cubemapName = $"{(int)cubemapOrigin.X}_{(int)cubemapOrigin.Y}_{(int)cubemapOrigin.Z}";
-
-                var cubemapSize = DEFAULT_CUBEMAP_SIZE;
-
-                if (cubemap.Size > 0)
+                foreach (var leafAmbientLighting in _bsp.LeafAmbientLights)
                 {
-                    cubemapSize = (int)Math.Pow(2, cubemap.Size - 1);
+                    var cubemapOrigin = new Vector3(leafAmbientLighting.Position[0], leafAmbientLighting.Position[1], leafAmbientLighting.Position[2]);
+                    var cubemapName = $"{(int)cubemapOrigin.X}_{(int)cubemapOrigin.Y}_{(int)cubemapOrigin.Z}";
+
+                    var cubemapSize = 1;
+                    int faceIndex = 0;
+
+                    foreach (var faceInfo in CUBEMAP_FACES)
+                    {
+                        var pixelData = RenderCubemap(cubemapOrigin, cubemapOrigin + faceInfo.Item2, faceInfo.Item3, cubemapName + faceInfo.Item1, faceInfo.Item4, cubemapSize, true);
+                        leafAmbientLighting.AmbientColor[faceIndex * 3] = pixelData[0];
+                        leafAmbientLighting.AmbientColor[faceIndex * 3 + 1] = pixelData[1];
+                        leafAmbientLighting.AmbientColor[faceIndex * 3 + 2] = pixelData[2];
+
+                        faceIndex++;
+                    }
                 }
-
-                var cubemapData = new List<byte>();
-
-                foreach (var faceInfo in CUBEMAP_FACES)
+            }
+            else
+            {
+                foreach (var cubemap in _bsp.Cubemaps)
                 {
-                    cubemapData.AddRange(RenderCubemap(cubemapOrigin, cubemapOrigin + faceInfo.Item2, faceInfo.Item3, cubemapName + faceInfo.Item1, faceInfo.Item4, cubemapSize));
-                }
+                    var cubemapOrigin = new Vector3(cubemap.Position[0], cubemap.Position[1], cubemap.Position[2]);
+                    var cubemapName = $"{(int)cubemapOrigin.X}_{(int)cubemapOrigin.Y}_{(int)cubemapOrigin.Z}";
 
-                cubemap.Data = cubemapData.ToArray();
+                    var cubemapSize = DEFAULT_CUBEMAP_SIZE;
+
+                    if (cubemap.Size > 0)
+                    {
+                        cubemapSize = (int)Math.Pow(2, cubemap.Size - 1);
+                    }
+
+                    var cubemapData = new List<byte>();
+
+                    foreach (var faceInfo in CUBEMAP_FACES)
+                    {
+                        cubemapData.AddRange(RenderCubemap(cubemapOrigin, cubemapOrigin + faceInfo.Item2, faceInfo.Item3, cubemapName + faceInfo.Item1, faceInfo.Item4, cubemapSize, false));
+                    }
+
+                    cubemap.Data = cubemapData.ToArray();
+                }
             }
 
             _bsp.Save(File.Create(App.Arguments.OutputFile));
@@ -120,7 +144,7 @@ namespace BuildCubemaps
             App.Current.Shutdown();
         }
 
-        private byte[] RenderCubemap(Vector3 cameraPosition, Vector3 cameraTarget, Vector3 cameraUp, string faceName, float faceRotation, int cubemapSize)
+        private byte[] RenderCubemap(Vector3 cameraPosition, Vector3 cameraTarget, Vector3 cameraUp, string faceName, float faceRotation, int cubemapSize, bool lightmapOnly)
         {
             GL.DepthMask(true);
             GL.Enable(EnableCap.DepthTest);
@@ -156,17 +180,22 @@ namespace BuildCubemaps
                     if (faceTextureInfo.Flags != 0)
                         continue;
 
-                    GL.ActiveTexture(TextureUnit.Texture0);
-                    GL.Enable(EnableCap.Texture2D);
-                    GL.BindTexture(TextureTarget.Texture2D, _textures[CharArrayConverter.CharArrayToString(faceTexture.Name)]);
-                    // GL.TexEnv(TextureEnvTarget.TextureEnv, TextureEnvParameter.TextureEnvMode, (int)TextureEnvMode.Replace);
-                    // GL.TexEnv(TextureEnvTarget.TextureEnv, TextureEnvParameter.CombineRgb, (int)TextureEnvMode.Replace);
+                    if (lightmapOnly)
+                    {
+                        GL.ActiveTexture(TextureUnit.Texture0);
+                        GL.Enable(EnableCap.Texture2D);
+                        GL.BindTexture(TextureTarget.Texture2D, _lightmaps[(int)currentFace.LightmapOffset]);
+                    }
+                    else
+                    {
+                        GL.ActiveTexture(TextureUnit.Texture0);
+                        GL.Enable(EnableCap.Texture2D);
+                        GL.BindTexture(TextureTarget.Texture2D, _textures[CharArrayConverter.CharArrayToString(faceTexture.Name)]);
 
-                    GL.ActiveTexture(TextureUnit.Texture1);
-                    GL.Enable(EnableCap.Texture2D);
-                    GL.BindTexture(TextureTarget.Texture2D, _lightmaps[(int)currentFace.LightmapOffset]);
-                    // GL.TexEnv(TextureEnvTarget.TextureEnv, TextureEnvParameter.TextureEnvMode, (int)TextureEnvMode.Modulate);
-                    // GL.TexEnv(TextureEnvTarget.TextureEnv, TextureEnvParameter.CombineRgb, (int)TextureEnvMode.Modulate);
+                        GL.ActiveTexture(TextureUnit.Texture1);
+                        GL.Enable(EnableCap.Texture2D);
+                        GL.BindTexture(TextureTarget.Texture2D, _lightmaps[(int)currentFace.LightmapOffset]);
+                    }
 
                     GL.Begin(PrimitiveType.Triangles);
 
@@ -224,23 +253,47 @@ namespace BuildCubemaps
                         var v1tx = new Vector2(((Vector3.Dot(vertex1, faceTextureInfo.S) + faceTextureInfo.SShift) / faceTexture.Width), ((Vector3.Dot(vertex1, faceTextureInfo.T) + faceTextureInfo.TShift) / faceTexture.Height));
                         var v1lmtx = new Vector2((Vector3.Dot(vertex1, faceTextureInfo.S) + faceTextureInfo.SShift - minU + 8) / (lightmapWidth * 16.0f), (Vector3.Dot(vertex1, faceTextureInfo.T) + faceTextureInfo.TShift - minV + 8) / (lightmapHeight * 16.0f));
 
-                        GL.MultiTexCoord2(TextureUnit.Texture0, v1tx.X, v1tx.Y);
-                        GL.MultiTexCoord2(TextureUnit.Texture1, v1lmtx.X, v1lmtx.Y);
-                        GL.Vertex3(vertex1.X, vertex1.Y, vertex1.Z);
+                        if (lightmapOnly)
+                        {
+                            GL.MultiTexCoord2(TextureUnit.Texture0, v1lmtx.X, v1lmtx.Y);
+                            GL.Vertex3(vertex1.X, vertex1.Y, vertex1.Z);
+                        }
+                        else
+                        {
+                            GL.MultiTexCoord2(TextureUnit.Texture0, v1tx.X, v1tx.Y);
+                            GL.MultiTexCoord2(TextureUnit.Texture1, v1lmtx.X, v1lmtx.Y);
+                            GL.Vertex3(vertex1.X, vertex1.Y, vertex1.Z);
+                        }
 
                         var v2tx = new Vector2(((Vector3.Dot(vertex2, faceTextureInfo.S) + faceTextureInfo.SShift) / faceTexture.Width), ((Vector3.Dot(vertex2, faceTextureInfo.T) + faceTextureInfo.TShift) / faceTexture.Height));
                         var v2lmtx = new Vector2((Vector3.Dot(vertex2, faceTextureInfo.S) + faceTextureInfo.SShift - minU + 8) / (lightmapWidth * 16.0f), (Vector3.Dot(vertex2, faceTextureInfo.T) + faceTextureInfo.TShift - minV + 8) / (lightmapHeight * 16.0f));
 
-                        GL.MultiTexCoord2(TextureUnit.Texture0, v2tx.X, v2tx.Y);
-                        GL.MultiTexCoord2(TextureUnit.Texture1, v2lmtx.X, v2lmtx.Y);
-                        GL.Vertex3(vertex2.X, vertex2.Y, vertex2.Z);
+                        if (lightmapOnly)
+                        {
+                            GL.MultiTexCoord2(TextureUnit.Texture0, v2lmtx.X, v2lmtx.Y);
+                            GL.Vertex3(vertex2.X, vertex2.Y, vertex2.Z);
+                        }
+                        else
+                        {
+                            GL.MultiTexCoord2(TextureUnit.Texture0, v2tx.X, v2tx.Y);
+                            GL.MultiTexCoord2(TextureUnit.Texture1, v2lmtx.X, v2lmtx.Y);
+                            GL.Vertex3(vertex2.X, vertex2.Y, vertex2.Z);
+                        }
 
                         var v3tx = new Vector2(((Vector3.Dot(vertex3, faceTextureInfo.S) + faceTextureInfo.SShift) / faceTexture.Width), ((Vector3.Dot(vertex3, faceTextureInfo.T) + faceTextureInfo.TShift) / faceTexture.Height));
                         var v3lmtx = new Vector2((Vector3.Dot(vertex3, faceTextureInfo.S) + faceTextureInfo.SShift - minU + 8) / (lightmapWidth * 16.0f), (Vector3.Dot(vertex3, faceTextureInfo.T) + faceTextureInfo.TShift - minV + 8) / (lightmapHeight * 16.0f));
 
-                        GL.MultiTexCoord2(TextureUnit.Texture0, v3tx.X, v3tx.Y);
-                        GL.MultiTexCoord2(TextureUnit.Texture1, v3lmtx.X, v3lmtx.Y);
-                        GL.Vertex3(vertex3.X, vertex3.Y, vertex3.Z);
+                        if (lightmapOnly)
+                        {
+                            GL.MultiTexCoord2(TextureUnit.Texture0, v3lmtx.X, v3lmtx.Y);
+                            GL.Vertex3(vertex3.X, vertex3.Y, vertex3.Z);
+                        }
+                        else
+                        {
+                            GL.MultiTexCoord2(TextureUnit.Texture0, v3tx.X, v3tx.Y);
+                            GL.MultiTexCoord2(TextureUnit.Texture1, v3lmtx.X, v3lmtx.Y);
+                            GL.Vertex3(vertex3.X, vertex3.Y, vertex3.Z);
+                        }
                     }
 
                     GL.End();
@@ -259,8 +312,8 @@ namespace BuildCubemaps
             var bitmapSource = BitmapFrame.Create(cubemapSize, cubemapSize, 96.0f, 96.0f, System.Windows.Media.PixelFormats.Rgb24, null, pixels, cubemapSize * 3);
             var transformedBitmap = new TransformedBitmap(bitmapSource, finalTransform);
 
-            var bitmapData = new byte[cubemapSize * cubemapSize * 3];
-            transformedBitmap.CopyPixels(bitmapData, cubemapSize * 3, 0);
+            var pixelData = new byte[cubemapSize * cubemapSize * 3];
+            transformedBitmap.CopyPixels(pixelData, cubemapSize * 3, 0);
 
             /*
             var pngEncoder = new PngBitmapEncoder();
@@ -274,7 +327,7 @@ namespace BuildCubemaps
 
             _glControl.SwapBuffers();
 
-            return bitmapData;
+            return pixelData;
         }
 
         private static Int32 GetSurfEdgeVertex(BspFile bsp, Int32 surfEdge)

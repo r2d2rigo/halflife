@@ -23,6 +23,7 @@ namespace GoldSrc.Bsp
         public byte[] ClipNodesData;
         public byte[] ModelsData;
         public BspCubemap[] Cubemaps;
+        public BspLeafAmbientLighting[] LeafAmbientLights;
 
         public BspFile()
         {
@@ -42,6 +43,7 @@ namespace GoldSrc.Bsp
             ClipNodesData = new byte[0];
             ModelsData = new byte[0];
             Cubemaps = new BspCubemap[0];
+            LeafAmbientLights = new BspLeafAmbientLighting[0];
         }
 
         public static BspFile Load(Stream stream)

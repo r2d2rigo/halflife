@@ -1112,6 +1112,33 @@ static void     Settings()
 }
 
 // =====================================================================================
+//  ProcessLeafAmbientLighting
+// =====================================================================================
+static void ProcessLeafAmbientLighting()
+{
+	g_numleafambientlights = 0;
+
+	for (int i = 0; i < g_numleafs; i++)
+	{
+		dleaf_t* leaf = &g_dleafs[i];
+
+		if (leaf->contents == CONTENTS_SOLID)
+		{
+			continue;
+		}
+
+		dleafambientlighting_t *ambientlight = &g_dleafambientlights[g_numleafambientlights];
+
+		ambientlight->origin[0] = leaf->mins[0] + ((leaf->maxs[0] - leaf->mins[0]) / 2);
+		ambientlight->origin[1] = leaf->mins[1] + ((leaf->maxs[1] - leaf->mins[1]) / 2);
+		ambientlight->origin[2] = leaf->mins[2] + ((leaf->maxs[2] - leaf->mins[2]) / 2);
+		memset(&ambientlight->ambientcolor[0], 0, sizeof(byte) * 6 * 3);
+
+		g_numleafambientlights++;
+	}
+}
+
+// =====================================================================================
 //  ProcessFile
 // =====================================================================================
 static void     ProcessFile(const char* const filename)
@@ -1158,7 +1185,9 @@ static void     ProcessFile(const char* const filename)
         ;
 #endif
 
-    // write the updated bsp file out
+	ProcessLeafAmbientLighting();
+	
+	// write the updated bsp file out
     FinishBSPFile();
 }
 

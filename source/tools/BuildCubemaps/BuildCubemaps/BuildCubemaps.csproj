@@ -94,6 +94,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="GoldSrc\Bsp\BspLeafAmbientLighting.cs" />
     <Compile Include="StartupArguments.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
@@ -160,7 +161,7 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>copy "$(TargetDir)*.exe" "$(SolutionDir)..\..\..\map tools"
-copy "$(TargetDir)*.dll" "$(SolutionDir)..\..\..\map tools"</PostBuildEvent>
+    <PostBuildEvent>copy "$(TargetDir)*.exe" "$(SolutionDir)..\..\..\tools\map tools"
+copy "$(TargetDir)*.dll" "$(SolutionDir)..\..\..\tools\map tools"</PostBuildEvent>
   </PropertyGroup>
 </Project>

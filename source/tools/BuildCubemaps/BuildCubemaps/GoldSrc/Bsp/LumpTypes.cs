@@ -19,6 +19,7 @@
         Models      = 14,
 
         Cubemaps    = 15,
-        Maximum = 16,
+        LeafAmbientLighting = 16,
+        Maximum = 17,
     }
 }

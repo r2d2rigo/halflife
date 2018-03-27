@@ -1,0 +1,7 @@
+& "..\..\tools\map tools\hlcsg.exe" "zoo"
+& "..\..\tools\map tools\hlbsp.exe" "zoo"
+& "..\..\tools\map tools\hlvis.exe" -full "zoo"
+& "..\..\tools\map tools\hlrad.exe" -extra -bounce 16 -notexscale -scale 1 -sky 0.5 -smooth 80 -texchop 16 -chop 32 "zoo"
+copy "zoo.bsp" "D:\Steam\steamapps\common\Half-Life\test\maps"
+Start-Process -Wait -FilePath "..\..\tools\map tools\BuildCubemaps.exe" -ArgumentList "--inputfile `"D:\Steam\steamapps\common\Half-Life\test\maps\zoo.bsp`" --outputfile `"D:\Steam\steamapps\common\Half-Life\test\maps\zoo_output.bsp`" --waddirectory `"D:\Steam\steamapps\common\Half-Life\valve`""
+Start-Process -Wait -FilePath "..\..\tools\map tools\BuildCubemaps.exe" -ArgumentList "--inputfile `"D:\Steam\steamapps\common\Half-Life\test\maps\zoo_output.bsp`" --outputfile `"D:\Steam\steamapps\common\Half-Life\test\maps\zoo_output2.bsp`" --waddirectory `"D:\Steam\steamapps\common\Half-Life\valve`" --ambientlighting"

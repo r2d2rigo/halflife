@@ -113,7 +113,8 @@ lump_t;
 #define LUMP_SURFEDGES    13
 #define LUMP_MODELS       14
 #define LUMP_CUBEMAPS     15
-#define HEADER_LUMPS      16
+#define LUMP_AMBIENT_LIGHTING 16
+#define HEADER_LUMPS      17
 
 //#define LUMP_MISCPAD      -1
 //#define LUMP_ZEROPAD      -2
@@ -289,6 +290,16 @@ typedef struct
 	int				offset;
 } dcubemap_t;
 
+// Ambient lighting
+
+#define MAX_MAP_AMBIENT_LIGHTING_SAMPLES	4096
+
+typedef struct
+{
+	int             origin[3];
+	byte            ambientcolor[6][3];
+} dleafambientlighting_t;
+
 //============================================================================
 
 #define ANGLE_UP    -1
@@ -361,6 +372,10 @@ extern int      g_dsurfedges_checksum;
 extern int      g_cubemapdatasize;
 extern byte*    g_dcubemapdata;
 extern int      g_dcubemapdata_checksum;
+
+extern int      g_numleafambientlights;
+extern dleafambientlighting_t    g_dleafambientlights[MAX_MAP_AMBIENT_LIGHTING_SAMPLES];
+extern int      g_dleafambientlights_checksum;
 
 extern void     DecompressVis(const byte* src, byte* const dest, const unsigned int dest_length);
 extern int      CompressVis(const byte* const src, const unsigned int src_length, byte* dest, unsigned int dest_length);
