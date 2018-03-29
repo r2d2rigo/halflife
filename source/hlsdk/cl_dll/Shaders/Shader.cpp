@@ -115,7 +115,7 @@ void CShader::SetParameter(std::string parameterName, int stride, int count, GLf
 //{
 //}
 
-void CShader::Apply()
+const void CShader::Apply() const
 {
 	glUseProgram(_shaderProgramObject);
 }

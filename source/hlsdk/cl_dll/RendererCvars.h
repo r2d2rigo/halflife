@@ -11,6 +11,7 @@ class CRendererCvars
 {
 public:
 	cvar_t* mat_leafvis;
+	cvar_t* r_visambient;
 
 public:
 	CRendererCvars(void);

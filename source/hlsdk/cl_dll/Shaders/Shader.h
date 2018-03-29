@@ -37,7 +37,7 @@ protected:
 	void SetParameter(std::string parameterName, int stride, int count, GLfloat* values);
 
 public:
-	virtual void Apply();
+	virtual const void Apply() const;
 
 
 	//TODO: remove this

@@ -16,17 +16,22 @@
 
 #include "Shaders\Shader.h"
 #include "Shaders\VertexLitGenericShader.h"
+#include "Shaders\Debug_WorldSpaceNormalShader.h"
 
 class CShaderManager
 {
 private:
 	CVertexLitGenericShader _vertexLitGeneric;
+	CDebug_WorldSpaceNormalShader _debugWorldSpaceNormal;
 
 public:
 	CShaderManager(void);
 	void Reset(void);
 
-	CVertexLitGenericShader* VertexLitGeneric();
+	void RestoreState();
+
+	CVertexLitGenericShader& VertexLitGeneric();
+	CDebug_WorldSpaceNormalShader& Debug_WorldSpaceNormal();
 };
 
 #endif

@@ -479,16 +479,16 @@ void CCustomEngineStudio::StudioDrawPointsProgrammablePipeline(void)
 		float s = 1.0 / (float)pMeshTexture->width;
 		float t = 1.0 / (float)pMeshTexture->height;
 
-		ShaderManager.VertexLitGeneric()->SetBaseTexture(pMeshTexture->index);
-		ShaderManager.VertexLitGeneric()->SetEnvMap(nearestCubemap->texture);
+		ShaderManager.VertexLitGeneric().SetBaseTexture(pMeshTexture->index);
+		ShaderManager.VertexLitGeneric().SetEnvMap(nearestCubemap->texture);
 
-		ShaderManager.VertexLitGeneric()->SetLightDir(m_pLighting->plightvec);
-		ShaderManager.VertexLitGeneric()->SetLightColor(m_pLighting->color, m_pLighting->shadelight / 255.0f);
+		ShaderManager.VertexLitGeneric().SetLightDir(m_pLighting->plightvec);
+		ShaderManager.VertexLitGeneric().SetLightColor(m_pLighting->color, m_pLighting->shadelight / 255.0f);
 
 		vec3_t origin, angles, forward, up, right;
 		m_pEngineStudio.GetViewInfo((float*)&origin, (float*)&forward, (float*)&right, (float*)&up);
 
-		ShaderManager.VertexLitGeneric()->SetCameraPos(origin);
+		ShaderManager.VertexLitGeneric().SetCameraPos(origin);
 		
 		float cubeValues[6 * 3];
 
@@ -500,20 +500,21 @@ void CCustomEngineStudio::StudioDrawPointsProgrammablePipeline(void)
 			// cubeValues[i] = 0.1f;
 		}
 
-		ShaderManager.VertexLitGeneric()->SetAmbientCube(cubeValues);
+		ShaderManager.VertexLitGeneric().SetAmbientCube(cubeValues);
 		
 		if (pMeshTexture->flags & STUDIO_NF_CHROME)
 		{
-			ShaderManager.VertexLitGeneric()->SetCubemapAmount(0.8f);
+			ShaderManager.VertexLitGeneric().SetCubemapAmount(0.8f);
 		}
 		else
 		{
-			ShaderManager.VertexLitGeneric()->SetCubemapAmount(0.1f);
+			ShaderManager.VertexLitGeneric().SetCubemapAmount(0.1f);
 		}
 
-		ShaderManager.VertexLitGeneric()->SetEnvMapContrast(1.0f);
+		ShaderManager.VertexLitGeneric().SetEnvMapContrast(1.0f);
 
-		ShaderManager.VertexLitGeneric()->Apply();
+		// ShaderManager.VertexLitGeneric().Apply();
+		ShaderManager.Debug_WorldSpaceNormal().Apply();
 
 		// GLint ambientLightLocation = glGetUniformLocation(ShaderManager.VertexLitGeneric()->ShaderProgram(), "AmbientLight");
 

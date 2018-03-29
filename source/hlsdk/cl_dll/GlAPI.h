@@ -7,6 +7,8 @@
 enum GlBeginMode
 {
 	Lines = 0,
+	Triangles = 1,
+	Quads = 2,
 };
 
 enum GlEnableMode
@@ -14,6 +16,7 @@ enum GlEnableMode
 	Texture2D = 0,
 	DepthTest = 1,
 	DepthWrite = 2,
+	CullFace = 3,
 };
 
 class CGlAPI
@@ -29,6 +32,8 @@ public:
 
 	void Vertex3f(const float &x, const float &y, const float &z);
 	void Vertex3fv(const float *v);
+
+	void Normal3f(const float &x, const float &y, const float &z);
 
 	void LineWidth(const float &width);
 	

@@ -20,6 +20,16 @@ void CGlAPI::Begin(const GlBeginMode &mode)
 		glBegin(GL_LINES);
 	}
 	break;
+	case GlBeginMode::Triangles:
+	{
+		glBegin(GL_TRIANGLES);
+	}
+	break;
+	case GlBeginMode::Quads:
+	{
+		glBegin(GL_QUADS);
+	}
+	break;
 	}
 }
 
@@ -48,6 +58,11 @@ void CGlAPI::Vertex3fv(const float *v)
 	glVertex3fv(v);
 }
 
+void CGlAPI::Normal3f(const float &x, const float &y, const float &z)
+{
+	glNormal3f(x, y, z);
+}
+
 void CGlAPI::LineWidth(const float &width)
 {
 	glLineWidth(width);
@@ -72,6 +87,11 @@ void CGlAPI::Enable(const GlEnableMode &enableMode)
 		glDepthMask(true);
 	}
 	break;
+	case GlEnableMode::CullFace:
+	{
+		glEnable(GL_CULL_FACE);
+	}
+	break;
 	}
 }
 
@@ -92,6 +112,11 @@ void CGlAPI::Disable(const GlEnableMode &enableMode)
 	case GlEnableMode::DepthWrite:
 	{
 		glDepthMask(false);
+	}
+	break;
+	case GlEnableMode::CullFace:
+	{
+		glDisable(GL_CULL_FACE);
 	}
 	break;
 	}
